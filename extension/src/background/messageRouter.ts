@@ -89,6 +89,17 @@ export function registerMessageRouter(): void {
       return true;
     }
 
+
+    if (
+      typeof message === 'object' &&
+      message !== null &&
+      (message as { type: string }).type === 'DEEPLENS_OPEN_SETTINGS'
+    ) {
+      void chrome.action.openPopup();
+      sendResponse({ ok: true });
+      return true;
+    }
+
     return false;
   });
 }
