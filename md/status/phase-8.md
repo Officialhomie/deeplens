@@ -50,4 +50,4 @@
 
 ## Next action
 
-**Phase 9 — Testing + QA Sign-off**
+**Phase 10 — Release Readiness**
