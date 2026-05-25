@@ -1,6 +1,7 @@
 import { createSSEParser } from './sseParser';
 import { buildUserMessage, SYSTEM_PROMPTS } from './prompts';
 import { ERROR_CODE, mapHttpError } from '../shared/errors';
+import { parseRetryAfter } from '../shared/retryAfter';
 import type { QueryMode, QueryPayload } from '../shared/types';
 import { MESSAGE } from '../shared/types';
 
@@ -42,6 +43,7 @@ export type TokenRelay = (msg: {
   token?: string;
   done?: boolean;
   error?: string;
+  retryAfterMs?: number;
 }) => void;
 
 export async function streamClaudeResponse(
@@ -88,10 +90,15 @@ export async function streamClaudeResponse(
     } catch {
       /* ignore */
     }
+    const code = mapHttpError(response.status, errorType);
     relay({
       type: MESSAGE.TOKEN,
       queryId,
-      error: mapHttpError(response.status, errorType),
+      error: code,
+      retryAfterMs:
+        code === ERROR_CODE.RATE_LIMIT
+          ? parseRetryAfter(response.headers.get('Retry-After'))
+          : undefined,
       done: true,
     });
     return;
