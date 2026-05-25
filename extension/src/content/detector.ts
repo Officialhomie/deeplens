@@ -208,9 +208,18 @@ export function initDetector(options: DetectorOptions): () => void {
     });
   };
 
-  document.addEventListener('mouseover', onMouseOver, true);
-  document.addEventListener('mousemove', onMouseMove, true);
-  document.addEventListener('mouseout', onMouseOut, true);
+  document.addEventListener('mouseover', onMouseOver, {
+    capture: true,
+    passive: true,
+  });
+  document.addEventListener('mousemove', onMouseMove, {
+    capture: true,
+    passive: true,
+  });
+  document.addEventListener('mouseout', onMouseOut, {
+    capture: true,
+    passive: true,
+  });
   window.addEventListener('mouseup', onMouseUp);
 
   return () => {
