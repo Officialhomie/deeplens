@@ -1,3 +1,6 @@
+# Deploys docs/ to https://officialhomie.github.io/deeplens/
+# Auto-runs on push to main/master when docs/** or this file changes.
+# Edits on dev do NOT publish until merged to main. See md/release/GITHUB_PAGES.md and AGENTS.md.
 name: Deploy GitHub Pages
 
 on:

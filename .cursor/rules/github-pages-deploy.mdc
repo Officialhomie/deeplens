@@ -1,0 +1,52 @@
+---
+description: GitHub Pages deploy workflow for docs/ and privacy policy — read before editing hosted site files
+alwaysApply: true
+---
+
+# GitHub Pages — deploy rules (DeepLens)
+
+**Canonical guide:** `md/release/GITHUB_PAGES.md`  
+**Agent entrypoint:** `AGENTS.md` § GitHub Pages
+
+## Live URLs
+
+- Privacy (CWS): https://officialhomie.github.io/deeplens/privacy/
+- Site home: https://officialhomie.github.io/deeplens/
+
+## What gets deployed
+
+- Source folder: `docs/` (HTML, privacy policy, store-asset scenes; not the extension bundle)
+- Workflow: `.github/workflows/deploy-pages.yml` → environment `github-pages`
+
+## Deploy workflow (follow every time)
+
+1. **Production deploys only from `main` (or `master`).**  
+   Any push to **`main`** that changes `docs/**` or `.github/workflows/deploy-pages.yml` **redeploys automatically** (~1–2 minutes).
+
+2. **If you edit on `dev` (or any other branch):**  
+   Merge (or cherry-pick) into **`main`** and push — **or** run **Actions → Deploy GitHub Pages → Run workflow** with branch **`main`**.
+
+3. **Do not assume `dev` updates the public site.** The `github-pages` environment may only allow `main` for deployment; default branch is `dev`.
+
+4. After deploy, verify HTTP 200 on the privacy URL before updating CWS or store copy.
+
+## Local preview (no deploy)
+
+```bash
+npx --yes serve docs -l 8080
+# http://127.0.0.1:8080/privacy/
+```
+
+## Troubleshooting (generic GitHub 404)
+
+| Symptom | Fix |
+|---------|-----|
+| “There isn’t a GitHub Pages site here” | Enable Pages: Settings → Pages → **GitHub Actions**, or run deploy workflow once (`enablement: true` in workflow). |
+| Workflow: “Get Pages site failed” | Same — Pages not enabled. |
+| Workflow: branch not allowed to deploy | Settings → Environments → `github-pages` → add **`main`** to deployment branches. |
+
+## Related paths
+
+- Hosted privacy HTML: `docs/privacy/index.html`
+- Markdown source (sync manually): `md/privacy/privacy-policy.md`
+- CWS paste copy (uses privacy URL): `md/release/store-listing-cws-paste.md`

@@ -20,7 +20,7 @@
 
 ## Listing
 
-- [x] Privacy policy hosted at public HTTPS URL (GitHub Pages — enable Actions)
+- [x] Privacy policy hosted at public HTTPS URL (GitHub Pages on `main` — see `md/release/GITHUB_PAGES.md`; auto-redeploy on `docs/**` push to `main`)
 - [ ] Privacy policy URL entered in CWS dashboard → https://officialhomie.github.io/deeplens/privacy/
 - [ ] Short + detailed description pasted from `md/release/store-listing.md`
 - [ ] Screenshots generated (`npm run screenshots`) and uploaded (≥1)
