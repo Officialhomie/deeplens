@@ -40,7 +40,7 @@ open deeplens-app-flow.html
 
 ## Project Status
 
-- **Build phase:** Phase 6 complete — Phase 7 (security hardening) next
+- **Build phase:** Phase 7 complete — Phase 8 (performance + resilience) next
 - **Version:** 1.0 (Draft)
 - **Author:** 0xVerse / eth-content-architect
 - **Date:** May 2026
