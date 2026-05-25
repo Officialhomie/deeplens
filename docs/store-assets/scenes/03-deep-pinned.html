@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>DeepLens — Deep mode pinned</title>
+    <link rel="stylesheet" href="./tooltip-demo.css" />
+    <style>
+      body {
+        background: #f5f5f8;
+      }
+      .dl-tooltip.is-pinned {
+        top: 80px;
+        right: 48px;
+        left: auto;
+      }
+      .scene-article {
+        max-width: 520px;
+        padding-right: 520px;
+      }
+    </style>
+  </head>
+  <body class="scene-page scene-wrap">
+    <article class="scene-article">
+      <h1>Zero-knowledge proofs in practice</h1>
+      <p>
+        A <span class="highlight-word">zero-knowledge</span> proof lets a
+        prover convince a verifier that a statement is true without revealing
+        why it is true beyond the validity of the claim itself.
+      </p>
+      <p>
+        Deep mode expands the mental model: commitments, witnesses, and the
+        intuition behind soundness and completeness.
+      </p>
+    </article>
+    <div class="dl-tooltip is-pinned" data-status="done">
+      <div class="dl-header">
+        <span class="dl-word">zero-knowledge</span>
+        <div class="dl-modes">
+          <button type="button" class="dl-mode-btn" data-mode="quick">
+            Quick
+          </button>
+          <button type="button" class="dl-mode-btn active" data-mode="deep">
+            Deep
+          </button>
+        </div>
+        <div class="dl-actions">
+          <span class="dl-icon-btn is-pinned" style="color: #5b5dff">📌</span>
+          <span class="dl-icon-btn">✕</span>
+        </div>
+      </div>
+      <div class="dl-body">
+        <div class="dl-stream">
+          <p>
+            <strong>What it is</strong>
+            A cryptographic protocol where the verifier learns nothing except
+            that the claim holds.
+          </p>
+          <p>
+            <strong>Mental model</strong>
+            Imagine proving you know a password without sending the password—you
+            send only evidence that satisfies the verifier's checks.
+          </p>
+          <p>
+            <strong>Why it matters here</strong>
+            The article discusses privacy-preserving verification; ZK is the
+            bridge between "trust the math" and "don't leak the data."
+          </p>
+        </div>
+      </div>
+      <div class="dl-footer">
+        <span class="dl-status" style="color: #00d4aa">Done</span>
+      </div>
+    </div>
+  </body>
+</html>
