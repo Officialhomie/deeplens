@@ -23,6 +23,18 @@ npm run build
 # Chrome → chrome://extensions → Load unpacked → extension/dist
 ```
 
+### Release package (Chrome Web Store)
+
+```bash
+cd extension
+npm run zip
+# Upload extension/release/deeplens-1.0.0.zip to CWS Developer Dashboard
+```
+
+See [`md/checklists/cws-submission-checklist.md`](md/checklists/cws-submission-checklist.md), [`md/release/store-listing-cws-paste.md`](md/release/store-listing-cws-paste.md), and [`md/release/SCREENSHOTS.md`](md/release/SCREENSHOTS.md).
+
+**Privacy policy (hosted):** https://officialhomie.github.io/deeplens/privacy/ — deploy via [GitHub Pages](md/release/GITHUB_PAGES.md).
+
 ### App flow doc
 
 ```bash
@@ -36,12 +48,13 @@ open deeplens-app-flow.html
 | **Implementation plan** | [`md/deeplens-implementation-plan.md`](md/deeplens-implementation-plan.md) |
 | **v1 scope freeze** | [`md/scope/v1-scope-freeze.md`](md/scope/v1-scope-freeze.md) |
 | **Module naming contract** | [`md/contracts/module-naming-map.md`](md/contracts/module-naming-map.md) |
-| **Phase 0 status** | [`md/status/phase-0.md`](md/status/phase-0.md) |
+| **Release notes** | [`md/release/RELEASE_NOTES-v1.0.0.md`](md/release/RELEASE_NOTES-v1.0.0.md) |
+| **Privacy policy** | [`md/privacy/privacy-policy.md`](md/privacy/privacy-policy.md) |
 | **Agent guide** | [`AGENTS.md`](AGENTS.md) |
 
 ## Project Status
 
-- **Build phase:** Phase 9 complete — Phase 10 (release readiness) next
-- **Version:** 1.0 (Draft)
+- **Build phase:** Phases 0–10 complete — **v1.0.0 release candidate ready**
+- **Version:** 1.0.0
 - **Author:** 0xVerse / eth-content-architect
 - **Date:** May 2026
