@@ -1,0 +1,180 @@
+/* Subset for CWS screenshot scenes — mirrors extension/styles/tooltip.css */
+
+.dl-tooltip {
+  --dl-bg: #ffffff;
+  --dl-text: #111111;
+  --dl-text-muted: #555555;
+  --dl-border: rgba(0, 0, 0, 0.1);
+  --dl-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  --dl-accent: #5b5dff;
+  --dl-accent2: #8b8dff;
+  --dl-amber: #f5a623;
+  --dl-teal: #00d4aa;
+  --dl-coral: #ff6b6b;
+  --dl-link: #4f8ef7;
+  --dl-mode-active-bg: rgba(128, 128, 128, 0.12);
+  position: absolute;
+  z-index: 10;
+  width: 380px;
+  max-height: 360px;
+  display: flex;
+  flex-direction: column;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--dl-text);
+  background: var(--dl-bg);
+  border: 1px solid var(--dl-border);
+  border-radius: 10px;
+  box-shadow: var(--dl-shadow);
+  overflow: hidden;
+}
+
+.dl-tooltip.is-pinned {
+  width: 480px;
+  max-height: 520px;
+  border-left: 3px solid var(--dl-accent);
+}
+
+.dl-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--dl-border);
+}
+
+.dl-word {
+  font-weight: 600;
+  font-size: 13px;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dl-modes {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  justify-content: center;
+}
+
+.dl-mode-btn {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--dl-text-muted);
+}
+
+.dl-mode-btn.active {
+  color: var(--dl-text);
+  background: var(--dl-mode-active-bg);
+  border-color: rgba(91, 93, 255, 0.35);
+}
+
+.dl-mode-btn[data-mode='quick'].active {
+  color: var(--dl-amber);
+}
+
+.dl-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.dl-icon-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dl-text-muted);
+  font-size: 14px;
+}
+
+.dl-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.dl-stream {
+  padding: 10px 12px;
+}
+
+.dl-stream p {
+  margin: 0 0 10px;
+}
+
+.dl-stream strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0.7;
+  margin: 12px 0 4px;
+}
+
+.dl-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--dl-accent);
+  animation: dl-blink 1s step-end infinite;
+}
+
+@keyframes dl-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.dl-footer {
+  padding: 6px 12px 8px;
+  border-top: 1px solid var(--dl-border);
+}
+
+.dl-status {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--dl-accent2);
+}
+
+.scene-page {
+  margin: 0;
+  min-height: 100vh;
+  background: #fafafa;
+  color: #222;
+  font-family: Georgia, serif;
+  font-size: 18px;
+  line-height: 1.75;
+}
+
+.scene-article {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 3rem 2rem 4rem;
+}
+
+.scene-article h1 {
+  font-family: system-ui, sans-serif;
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+}
+
+.scene-article p {
+  margin: 0 0 1.25rem;
+}
+
+.scene-wrap {
+  position: relative;
+  min-height: 800px;
+}
+
+.highlight-word {
+  background: rgba(91, 93, 255, 0.12);
+  border-radius: 2px;
+}
