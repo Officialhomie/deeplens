@@ -40,6 +40,6 @@
 
 ## Follow-ups (out of Phase 7)
 
-- Published privacy policy page for CWS
+- Publish hosted URL for `md/privacy/privacy-policy.md` on CWS listing (Phase 10 doc ready)
 - Blacklist UI (v1.5)
 - Hosted proxy mode privacy copy (v1.1)
