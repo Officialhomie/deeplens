@@ -20,6 +20,10 @@ describe('storage', () => {
     expect(all.hoverDelayMs).toBe(300);
   });
 
+  it('defaults onboardingComplete to false', async () => {
+    expect(await storage.get('onboardingComplete')).toBe(false);
+  });
+
   it('getPublicSettings omits apiKey', async () => {
     await storage.set('apiKey', 'sk-secret');
     await storage.set('hoverDelayMs', 400);
