@@ -3,6 +3,7 @@ export const MESSAGE = {
   QUERY: 'DEEPLENS_QUERY',
   ABORT: 'DEEPLENS_ABORT',
   TOKEN: 'DEEPLENS_TOKEN',
+  OPEN_SETTINGS: 'DEEPLENS_OPEN_SETTINGS',
 } as const;
 
 export type QueryMode = 'quick' | 'deep' | 'links';
