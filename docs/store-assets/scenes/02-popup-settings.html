@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>DeepLens — Settings</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        width: 1280px;
+        height: 800px;
+        background: radial-gradient(
+            ellipse 70% 50% at 50% 0%,
+            rgba(91, 93, 255, 0.2),
+            transparent
+          ),
+          #0a0a0f;
+        display: grid;
+        place-items: center;
+        font-family: system-ui, sans-serif;
+      }
+      .frame {
+        width: 320px;
+        background: #13131f;
+        color: #e2e2f0;
+        border-radius: 12px;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .popup-header {
+        display: flex;
+        gap: 10px;
+        padding: 14px 16px;
+        background: #13131f;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      }
+      .logo {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #5b5dff, #00d4aa);
+        color: #fff;
+        font-weight: 800;
+        font-size: 11px;
+        display: grid;
+        place-items: center;
+      }
+      .header-text h1 {
+        margin: 0;
+        font-size: 1rem;
+      }
+      .header-text h1 span {
+        color: #5b5dff;
+      }
+      .active-toggle {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: #9898b0;
+        margin-top: 6px;
+      }
+      .view {
+        padding: 14px 16px;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 14px;
+        font-size: 0.75rem;
+        color: #9898b0;
+      }
+      .field input[type='password'],
+      .field input[type='range'] {
+        width: 100%;
+      }
+      .field input[type='password'] {
+        padding: 8px 10px;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: #1a1a2e;
+        color: #e2e2f0;
+      }
+      .segmented {
+        display: flex;
+        gap: 4px;
+      }
+      .seg-btn {
+        flex: 1;
+        padding: 8px;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: #1a1a2e;
+        color: #9898b0;
+        font-weight: 600;
+        font-size: 0.8rem;
+      }
+      .seg-btn.active {
+        background: rgba(91, 93, 255, 0.25);
+        color: #e2e2f0;
+        border-color: rgba(91, 93, 255, 0.5);
+      }
+      .toggle-row {
+        display: flex;
+        justify-content: space-between;
+        color: #e2e2f0;
+        margin-top: 6px;
+      }
+      .popup-footer {
+        padding: 10px 16px;
+        font-size: 0.7rem;
+        color: #6b6b85;
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+        text-align: center;
+      }
+      .caption {
+        position: absolute;
+        bottom: 48px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        color: #9898b0;
+        font-size: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <p class="caption">Your API key stays on this device only</p>
+    <div class="frame">
+      <header class="popup-header">
+        <div class="logo">DL</div>
+        <div class="header-text">
+          <h1>Deep<span>Lens</span></h1>
+          <label class="active-toggle">
+            <span>Active</span>
+            <span>✓</span>
+          </label>
+        </div>
+      </header>
+      <section class="view">
+        <label class="field">
+          <span>Anthropic API key</span>
+          <input type="password" value="sk-ant-api03-••••••••••••" readonly />
+          <small>Stored locally only. Never sent to DeepLens servers.</small>
+        </label>
+        <div class="field">
+          <span>Default mode</span>
+          <div class="segmented">
+            <button type="button" class="seg-btn">Quick</button>
+            <button type="button" class="seg-btn active">Deep</button>
+          </div>
+        </div>
+        <label class="field">
+          <span>Hover delay — 300 ms</span>
+          <input type="range" min="200" max="800" value="300" />
+        </label>
+        <div class="field">
+          <span>Trigger methods</span>
+          <label class="toggle-row"><span>Hover</span><span>✓</span></label>
+          <label class="toggle-row"
+            ><span>Text selection</span><span>✓</span></label
+          >
+        </div>
+      </section>
+      <footer class="popup-footer">
+        Your text is sent to Anthropic's API to generate responses.
+      </footer>
+    </div>
+  </body>
+</html>
