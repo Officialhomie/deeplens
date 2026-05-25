@@ -1,0 +1,100 @@
+:root {
+  --ink: #0a0a0f;
+  --surface: #13131f;
+  --surface2: #1a1a2e;
+  --text-primary: #e2e2f0;
+  --text-muted: #6b6b85;
+  --accent: #5b5dff;
+  --accent2: #8b8dff;
+  --line: rgba(255, 255, 255, 0.07);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  width: 320px;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  background: var(--ink);
+  color: var(--text-primary);
+}
+
+.popup-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), #00d4aa);
+  color: #fff;
+  font-weight: 800;
+  font-size: 11px;
+  display: grid;
+  place-items: center;
+}
+
+.popup-header h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.popup-header h1 span {
+  color: var(--accent2);
+}
+
+.popup-body {
+  padding: 14px 16px 16px;
+  background: var(--surface2);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.field input[type='password'],
+.field select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #16162a;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.field small {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.toggle-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.status {
+  margin: 0;
+  font-size: 11px;
+  min-height: 14px;
+  color: var(--accent2);
+}
