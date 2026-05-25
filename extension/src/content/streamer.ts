@@ -1,14 +1,15 @@
 import { isTokenMessage, type QueryMode, type TokenMessage } from '../shared/types';
 import { notifyStreamStarted } from './detector';
-import { appendToBuffer, renderMarkdown } from './streamRenderer';
+import { safeRenderMarkdown } from './sanitize';
+import { appendToBuffer } from './streamRenderer';
 import {
-  getStatusElement,
-  getStreamElement,
-  hideStreamShell,
-  showStreamError,
-  showStreamShell,
-} from './streamShell';
-import { tooltipState } from './tooltip';
+  destroyTooltip,
+  setDoneState,
+  setStreamingContent,
+  showTooltip,
+  showTooltipError,
+  tooltipState,
+} from './tooltip';
 
 let activeQueryId: string | null = null;
 
@@ -19,22 +20,12 @@ export function prepareStream(
   mode: QueryMode,
 ): void {
   activeQueryId = queryId;
-  tooltipState.isVisible = true;
-  tooltipState.status = 'loading';
-  tooltipState.streamBuffer = '';
-  tooltipState.error = null;
-  tooltipState.currentMode = mode;
-  tooltipState.triggerRect = triggerRect;
-
-  showStreamShell(word, triggerRect);
+  showTooltip(word, triggerRect, mode);
 }
 
 export function resetStream(): void {
   activeQueryId = null;
-  tooltipState.status = 'idle';
-  tooltipState.streamBuffer = '';
-  tooltipState.isVisible = false;
-  hideStreamShell();
+  destroyTooltip(true);
 }
 
 function isStaleMessage(msg: TokenMessage): boolean {
@@ -46,45 +37,34 @@ function handleTokenMessage(msg: TokenMessage): void {
   if (isStaleMessage(msg)) return;
 
   if (msg.error) {
-    tooltipState.status = 'error';
-    tooltipState.error = msg.error;
-    showStreamError(msg.error);
+    showTooltipError(msg.error);
     activeQueryId = null;
     return;
   }
 
   if (msg.token) {
     notifyStreamStarted();
-    tooltipState.status = 'streaming';
     tooltipState.streamBuffer = appendToBuffer(
       tooltipState.streamBuffer,
       msg.token,
     );
-    const el = getStreamElement();
-    const status = getStatusElement();
-    if (status) status.textContent = 'Streaming…';
-    if (el) el.innerHTML = renderMarkdown(tooltipState.streamBuffer);
+    const html = safeRenderMarkdown(tooltipState.streamBuffer);
+    setStreamingContent(html, true);
   }
 
   if (msg.done) {
-    tooltipState.status = 'done';
-    const status = getStatusElement();
-    if (status) status.textContent = 'Done';
+    setDoneState();
     activeQueryId = null;
   }
 }
 
-/** Phase 4 — SSE token receiver and stream state (TRD §4.4) */
 export function initStreamer(): void {
-  chrome.runtime.onMessage.addListener((message) => {
+  chrome.runtime.onMessage.addListener((message, sender) => {
+    if (sender.id !== chrome.runtime.id) return;
     if (!isTokenMessage(message)) return;
     handleTokenMessage(message);
     if (import.meta.env.DEV && message.error) {
       console.debug('[DeepLens] stream error:', message.error);
     }
-  });
-
-  document.addEventListener('deeplens:abort', () => {
-    resetStream();
   });
 }
