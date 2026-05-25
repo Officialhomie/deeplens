@@ -18,6 +18,7 @@ AI-powered contextual intelligence layer for the web — a Chrome extension that
 ```bash
 cd extension
 npm install
+npm run icons
 npm run build
 # Chrome → chrome://extensions → Load unpacked → extension/dist
 ```
@@ -40,7 +41,7 @@ open deeplens-app-flow.html
 
 ## Project Status
 
-- **Build phase:** Phase 8 complete — Phase 9 (testing + QA) next
+- **Build phase:** Phase 9 complete — Phase 10 (release readiness) next
 - **Version:** 1.0 (Draft)
 - **Author:** 0xVerse / eth-content-architect
 - **Date:** May 2026
