@@ -15,6 +15,8 @@ Build order is defined in **`md/deeplens-implementation-plan.md`**. Do not start
 | **4 — Streaming + AI Orchestration** | Done | `md/status/phase-4.md` |
 | **5 — Tooltip UI System** | Done | `md/status/phase-5.md` |
 | **6 — Popup Settings + Configuration** | Done | `md/status/phase-6.md` |
+| **7 — Security + Privacy Hardening** | Done | `md/status/phase-7.md` |
+| **8 — Performance + Resilience** | Not started | — |
 
 ## Required reads before coding
 
