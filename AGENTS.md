@@ -17,7 +17,7 @@ Build order is defined in **`md/deeplens-implementation-plan.md`**. Do not start
 | **6 — Popup Settings + Configuration** | Done | `md/status/phase-6.md` |
 | **7 — Security + Privacy Hardening** | Done | `md/status/phase-7.md` |
 | **8 — Performance + Resilience** | Done | `md/status/phase-8.md` |
-| **9 — Testing + QA Sign-off** | Not started | — |
+| **9 — Testing + QA Sign-off** | Done | `md/status/phase-9.md` |
 
 ## Required reads before coding
 
