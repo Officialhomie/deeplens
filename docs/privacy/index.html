@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DeepLens Privacy Policy</title>
+    <style>
+      :root {
+        --bg: #0a0a0f;
+        --surface: #13131f;
+        --text: #e2e2f0;
+        --muted: #9898b0;
+        --accent: #5b5dff;
+        --line: rgba(255, 255, 255, 0.08);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          Georgia,
+          'Times New Roman',
+          serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.7;
+      }
+      header {
+        font-family: system-ui, sans-serif;
+        background: var(--surface);
+        border-bottom: 1px solid var(--line);
+        padding: 1.5rem 2rem;
+      }
+      header a {
+        color: var(--accent);
+        text-decoration: none;
+        font-size: 0.9rem;
+      }
+      header h1 {
+        font-size: 1.75rem;
+        margin: 0.5rem 0 0;
+        font-weight: 700;
+      }
+      header p {
+        margin: 0.25rem 0 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+      main {
+        max-width: 42rem;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+      }
+      main h2 {
+        font-family: system-ui, sans-serif;
+        font-size: 1.15rem;
+        margin: 2rem 0 0.75rem;
+        color: var(--accent);
+      }
+      main p,
+      main li {
+        color: var(--text);
+      }
+      main ul {
+        padding-left: 1.25rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+        margin: 1rem 0;
+        font-family: system-ui, sans-serif;
+      }
+      th,
+      td {
+        border: 1px solid var(--line);
+        padding: 0.6rem 0.75rem;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: var(--surface);
+        color: var(--muted);
+        font-weight: 600;
+      }
+      a {
+        color: var(--accent);
+      }
+      .summary {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        font-size: 1.05rem;
+      }
+      footer {
+        font-family: system-ui, sans-serif;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.85rem;
+        padding: 2rem;
+        border-top: 1px solid var(--line);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a href="../">← DeepLens</a>
+      <h1>Privacy Policy</h1>
+      <p>Effective May 25, 2026 · Version 1.0 · Chrome extension v1.0.0</p>
+    </header>
+    <main>
+      <div class="summary">
+        <p>
+          DeepLens runs on your device. We do not operate a DeepLens backend that
+          stores your reading activity in v1.0. When you trigger a lookup,
+          selected text and page context are sent <strong>directly from your
+          browser</strong> to <strong>Anthropic’s API</strong> using
+          <strong>your own API key</strong>.
+        </p>
+      </div>
+
+      <h2>What data is processed</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Where it goes</th>
+            <th>Why</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Selected word or phrase</td>
+            <td>Anthropic API</td>
+            <td>Generate AI explanation</td>
+          </tr>
+          <tr>
+            <td>Surrounding sentence, paragraph, heading</td>
+            <td>Anthropic API</td>
+            <td>Context for the response</td>
+          </tr>
+          <tr>
+            <td>Page title, URL, domain</td>
+            <td>Anthropic API</td>
+            <td>Context for the response</td>
+          </tr>
+          <tr>
+            <td>Your Anthropic API key</td>
+            <td>Stored locally; sent only to api.anthropic.com</td>
+            <td>Authenticate API requests</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>What we do not collect (v1.0)</h2>
+      <ul>
+        <li>No DeepLens account or login</li>
+        <li>No DeepLens server-side query logging</li>
+        <li>No analytics or advertising trackers in the extension</li>
+        <li>No sale of personal data</li>
+      </ul>
+
+      <h2>Local storage</h2>
+      <p>
+        Settings (including your API key, hover delay, default mode, and enable
+        toggles) are stored in <strong>Chrome local extension storage</strong> on
+        your device. Uninstalling the extension or clearing extension data
+        removes this storage.
+      </p>
+
+      <h2>Third parties</h2>
+      <p>
+        <strong>Anthropic</strong> processes text you send when you use the
+        extension. Their handling of data is governed by
+        <a href="https://www.anthropic.com/legal/privacy" rel="noopener"
+          >Anthropic’s privacy policy</a
+        >. You must comply with Anthropic’s terms when using your API key.
+      </p>
+
+      <h2>Permissions (Chrome)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Permission</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>storage</code></td>
+            <td>Save settings and API key locally</td>
+          </tr>
+          <tr>
+            <td><code>activeTab</code></td>
+            <td>Extension action on the current tab</td>
+          </tr>
+          <tr>
+            <td><code>scripting</code></td>
+            <td>Reserved for extension injection patterns</td>
+          </tr>
+          <tr>
+            <td>Host: api.anthropic.com</td>
+            <td>Stream AI responses from Claude API</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Content scripts run on web pages you visit so hover and selection can
+        work; they do <strong>not</strong> receive your API key.
+      </p>
+
+      <h2>Your choices</h2>
+      <ul>
+        <li>Disable the extension globally in the popup</li>
+        <li>Turn off hover or selection triggers</li>
+        <li>Remove or change your API key at any time</li>
+        <li>
+          Stop using the extension on sensitive sites (domain blacklist UI
+          planned)
+        </li>
+      </ul>
+
+      <h2>Children</h2>
+      <p>DeepLens is not directed at children under 13.</p>
+
+      <h2>Changes</h2>
+      <p>
+        We may update this policy when the product changes (for example, if a
+        hosted API option is added). The effective date will be revised on this
+        page.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        For privacy questions about DeepLens, contact the publisher listed on the
+        Chrome Web Store listing.
+      </p>
+    </main>
+    <footer>DeepLens · Privacy Policy v1.0</footer>
+  </body>
+</html>
