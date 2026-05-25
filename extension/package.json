@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "vite build --watch",
     "build": "vite build",
-    "test": "vitest run",
+    "test": "vitest run && npm run test:e2e",
     "test:watch": "vitest",
     "measure": "node scripts/measure-bundles.mjs",
     "zip": "node scripts/zip.js",
-    "icons": "node scripts/generate-icons.mjs"
+    "icons": "node scripts/generate-icons.mjs",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.0-beta.28",
@@ -20,7 +22,8 @@
     "pngjs": "^7.0.0",
     "typescript": "^5.7.2",
     "vite": "^6.0.3",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "@playwright/test": "^1.49.1"
   },
   "dependencies": {
     "dompurify": "^3.4.5"
