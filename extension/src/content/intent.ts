@@ -1,6 +1,6 @@
-import { storage } from '../shared/storage';
 import { MESSAGE } from '../shared/types';
 import { initDetector, type TriggerPayload } from './detector';
+import { getCachedSettings } from './settingsCache';
 
 export const DEEPLENS_TRIGGER_EVENT = 'deeplens:trigger';
 
@@ -26,7 +26,7 @@ function dispatchTrigger(payload: TriggerPayload): void {
 export function initIntentEngine(): () => void {
   return initDetector({
     getConfig: async () => {
-      const settings = await storage.getPublicSettings();
+      const settings = getCachedSettings();
       return {
         hoverDelayMs: settings.hoverDelayMs,
         hoverEnabled: settings.hoverEnabled,
