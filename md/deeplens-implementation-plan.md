@@ -312,18 +312,18 @@ Deliverables:
 - Phase 6 status report.
 
 #### A) Implementation Checklist
-- [ ] All planned modules for this phase exist and are wired
-- [ ] Interfaces/contracts match TRD definitions
-- [ ] No out-of-scope work added
-- [ ] Logs/errors are actionable and non-sensitive
-- [ ] Docs for this phase updated
+- [x] All planned modules for this phase exist and are wired
+- [x] Interfaces/contracts match TRD definitions
+- [x] No out-of-scope work added
+- [x] Logs/errors are actionable and non-sensitive
+- [x] Docs for this phase updated
 
 #### B) Validation Checklist
-- [ ] Acceptance tests for this phase pass
-- [ ] No blocker bugs remain in this phase scope
-- [ ] Downstream dependency assumptions verified
-- [ ] Security/privacy checks passed for touched areas
-- [ ] Phase exit criteria satisfied and signed off
+- [x] Acceptance tests for this phase pass
+- [x] No blocker bugs remain in this phase scope
+- [x] Downstream dependency assumptions verified
+- [x] Security/privacy checks passed for touched areas
+- [x] Phase exit criteria satisfied and signed off
 
 Exit Criteria:
 - Settings persist correctly and runtime behavior updates reliably.
@@ -609,7 +609,7 @@ Note:
 | Phase 3 — Context + Prompt Intelligence | 30–42 | Engineering | done | 2026-05-25 | 2026-05-25 | extractor + query dispatch; 34 tests |
 | Phase 4 — Streaming + AI Orchestration | 42–56 | Engineering | done | 2026-05-25 | 2026-05-25 | SSE + queryId + stream shell; 44 tests |
 | Phase 5 — Tooltip UI System | 56–70 | Engineering + Design | done | 2026-05-25 | 2026-05-25 | tooltip engine + CSS tokens; 47 tests |
-| Phase 6 — Popup Settings + Configuration | 70–78 | Engineering | not started | - | - | Awaiting Phase 5 completion |
+| Phase 6 — Popup Settings + Configuration | 70–78 | Engineering | done | 2026-05-25 | 2026-05-25 | Full popup + onboarding; session mode; 50 tests |
 | Phase 7 — Security + Privacy Hardening | 78–84 | Engineering + Security | not started | - | - | Awaiting Phase 6 completion |
 | Phase 8 — Performance + Resilience | 84–90 | Engineering | not started | - | - | Awaiting Phase 7 completion |
 | Phase 9 — Testing + QA Sign-off | 90–96 | QA + Engineering | not started | - | - | Awaiting Phase 8 completion |
