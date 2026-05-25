@@ -8,8 +8,15 @@ export const ERROR_CODE = {
   BAD_REQUEST: 'BAD_REQUEST',
   API_ERROR: 'API_ERROR',
   NETWORK_ERROR: 'NETWORK_ERROR',
+  CONNECTION_LOST: 'CONNECTION_LOST',
   ABORTED: 'ABORTED',
 } as const;
+
+/** Default auto-retry delay for API_OVERLOADED (TRD §10.2) */
+export const API_OVERLOADED_RETRY_MS = 3000;
+
+/** Stream idle watchdog — no tokens before treating as disconnected */
+export const STREAM_IDLE_TIMEOUT_MS = 45_000;
 
 export type ErrorCode = (typeof ERROR_CODE)[keyof typeof ERROR_CODE];
 
