@@ -65,15 +65,44 @@
       a:hover {
         background: rgba(0, 212, 170, 0.1);
       }
+      .banner {
+        max-width: 36rem;
+        margin: 0 0 1.5rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        color: #c8c8e0;
+        background: rgba(91, 93, 255, 0.12);
+        border: 1px solid rgba(91, 93, 255, 0.35);
+        border-radius: 8px;
+        text-align: left;
+      }
+      .banner a {
+        display: inline;
+        padding: 0;
+        border: none;
+        color: var(--teal);
+      }
+      .banner a:hover {
+        background: transparent;
+        text-decoration: underline;
+      }
     </style>
   </head>
   <body>
+    <p class="banner">
+      This page is <strong>marketing only</strong> — it does not run the Chrome
+      extension. Install DeepLens from
+      <code>extension/dist</code>, then try the
+      <a href="./test/">test page</a> or any article (Wikipedia, Medium).
+    </p>
     <h1>Deep<span>Lens</span></h1>
     <p>
       AI-powered contextual intelligence for the web. Hover any word or select a
       phrase for streaming deep context—without leaving the page.
     </p>
     <nav>
+      <a href="./test/">Test the extension</a>
       <a href="./privacy/">Privacy Policy</a>
       <a href="https://github.com/Officialhomie/deeplens" rel="noopener"
         >GitHub</a
