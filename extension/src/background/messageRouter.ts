@@ -1,12 +1,18 @@
 import { streamClaudeResponse } from './claudeAPI';
 import { checkSessionRateLimit } from './rateLimiter';
+import { getApiKey } from './storageSecure';
 import {
   beginQuery,
   invalidateQuery,
   isActiveQuery,
 } from './streamSession';
-import { storage } from '../shared/storage';
+import { isTrustedExtensionSender, isTrustedTabSender } from './trust';
 import { ERROR_CODE } from '../shared/errors';
+import { safeDebug } from '../shared/safeLog';
+import {
+  assertPayloadHasNoSecrets,
+  validateQueryPayload,
+} from '../shared/validatePayload';
 import {
   isAbortMessage,
   isQueryMessage,
@@ -38,6 +44,7 @@ async function handleQuery(payload: QueryPayload, tabId: number): Promise<void> 
   const signal = currentAbortController.signal;
 
   beginQuery(tabId, payload.queryId);
+  assertPayloadHasNoSecrets(payload);
 
   if (!checkSessionRateLimit()) {
     sendToken(tabId, {
@@ -49,7 +56,7 @@ async function handleQuery(payload: QueryPayload, tabId: number): Promise<void> 
     return;
   }
 
-  const apiKey = await storage.get('apiKey');
+  const apiKey = await getApiKey();
   if (!apiKey.trim()) {
     sendToken(tabId, {
       type: MESSAGE.TOKEN,
@@ -69,10 +76,31 @@ async function handleQuery(payload: QueryPayload, tabId: number): Promise<void> 
 
 export function registerMessageRouter(): void {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (!isTrustedExtensionSender(sender)) {
+      return false;
+    }
+
     if (isQueryMessage(message)) {
       const tabId = sender.tab?.id;
-      if (tabId === undefined) {
-        sendResponse({ ok: false, error: 'NO_TAB' });
+      if (!isTrustedTabSender(sender) || tabId === undefined) {
+        safeDebug('query rejected: untrusted sender', { url: sender.tab?.url });
+        sendResponse({ ok: false, error: 'UNTRUSTED_SENDER' });
+        return true;
+      }
+      if (!validateQueryPayload(message.payload)) {
+        const fallbackId =
+          typeof message.payload === 'object' &&
+          message.payload &&
+          'queryId' in message.payload
+            ? String((message.payload as QueryPayload).queryId)
+            : 'invalid';
+        sendToken(tabId, {
+          type: MESSAGE.TOKEN,
+          queryId: fallbackId,
+          error: ERROR_CODE.BAD_REQUEST,
+          done: true,
+        });
+        sendResponse({ ok: false, error: 'INVALID_PAYLOAD' });
         return true;
       }
       void handleQuery(message.payload, tabId);
@@ -89,11 +117,10 @@ export function registerMessageRouter(): void {
       return true;
     }
 
-
     if (
       typeof message === 'object' &&
       message !== null &&
-      (message as { type: string }).type === 'DEEPLENS_OPEN_SETTINGS'
+      (message as { type: string }).type === MESSAGE.OPEN_SETTINGS
     ) {
       void chrome.action.openPopup();
       sendResponse({ ok: true });
