@@ -8,6 +8,7 @@
     "build": "vite build",
     "test": "vitest run",
     "test:watch": "vitest",
+    "measure": "node scripts/measure-bundles.mjs",
     "zip": "node scripts/zip.js",
     "icons": "node scripts/generate-icons.mjs"
   },
