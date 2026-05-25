@@ -1,9 +1,9 @@
-import { initDetector } from './detector';
+import { initIntentEngine } from './intent';
 import { initStreamer } from './streamer';
 import { initTooltip } from './tooltip';
 
 function boot(): void {
-  initDetector();
+  initIntentEngine();
   initStreamer();
   initTooltip();
 
