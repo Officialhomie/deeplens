@@ -27,6 +27,8 @@ export interface QueryPayload {
   triggeredBy: TriggerMode;
   /** Random UUID per extension session — abort routing */
   sessionId: string;
+  /** Unique id per lookup — tokens must match or are dropped */
+  queryId: string;
 }
 
 export interface ExtractedContext {
@@ -53,6 +55,7 @@ export interface TooltipState {
 
 export interface TokenMessage {
   type: typeof MESSAGE.TOKEN;
+  queryId?: string;
   token?: string;
   done?: boolean;
   error?: string;

@@ -3,3 +3,13 @@ dist/
 *.local
 .DS_Store
 extension/dist/
+
+# Local commit tooling and snapshots (not shipped)
+.phase1-snapshots/
+.phase2-snapshots/
+.phase1-commit.sh
+.phase2-commit.sh
+.phase1-files.txt
+.phase2-files.txt
+.workspace-current-backup/
+.workspace-full-backup-extension/

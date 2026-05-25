@@ -12,8 +12,8 @@ describe('prompts', () => {
     const msg = buildUserMessage({
       selectedText: 'eigenvalue',
       sentenceContext: 'The eigenvalue is central.',
-      paragraphContext: '',
-      headingContext: null,
+      paragraphContext: 'Full paragraph about matrices.',
+      headingContext: 'Chapter 3',
       pageTitle: 'Linear Algebra',
       pageURL: 'https://example.com',
       pageDomain: 'example.com',
@@ -22,5 +22,7 @@ describe('prompts', () => {
     expect(msg).toContain('eigenvalue');
     expect(msg).toContain('Linear Algebra');
     expect(msg).toContain('academic');
+    expect(msg).toContain('Paragraph context');
+    expect(msg).toContain('Chapter 3');
   });
 });

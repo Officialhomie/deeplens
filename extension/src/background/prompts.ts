@@ -65,10 +65,17 @@ Rules:
 };
 
 export function buildUserMessage(ctx: ExtractedContext): string {
-  return [
+  const lines = [
     `Word / phrase: "${ctx.selectedText}"`,
     `Surrounding sentence: "${ctx.sentenceContext}"`,
     `Page title: "${ctx.pageTitle}"`,
     `Domain: "${ctx.pageDomain}" (${ctx.domainCategory})`,
-  ].join('\n');
+  ];
+  if (ctx.paragraphContext) {
+    lines.push(`Paragraph context: "${ctx.paragraphContext}"`);
+  }
+  if (ctx.headingContext) {
+    lines.push(`Section heading: "${ctx.headingContext}"`);
+  }
+  return lines.join('\n');
 }

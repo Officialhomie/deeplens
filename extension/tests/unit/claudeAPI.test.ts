@@ -20,6 +20,7 @@ describe('claudeAPI', () => {
         context: baseContext,
         triggeredBy: 'hover',
         sessionId: '1',
+        queryId: 'q1',
       }).max_tokens,
     ).toBe(MAX_TOKENS.quick);
 
@@ -29,6 +30,7 @@ describe('claudeAPI', () => {
         context: baseContext,
         triggeredBy: 'select',
         sessionId: '1',
+        queryId: 'q1',
       }).max_tokens,
     ).toBe(MAX_TOKENS.deep);
   });
@@ -39,6 +41,7 @@ describe('claudeAPI', () => {
       context: baseContext,
       triggeredBy: 'hover',
       sessionId: '1',
+      queryId: 'q1',
     });
     expect(req.stream).toBe(true);
     expect(req.system).toContain('DeepLens');

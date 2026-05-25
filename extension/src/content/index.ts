@@ -1,9 +1,11 @@
 import { initIntentEngine } from './intent';
+import { initQueryCoordinator } from './queryCoordinator';
 import { initStreamer } from './streamer';
 import { initTooltip } from './tooltip';
 
 function boot(): void {
   initIntentEngine();
+  initQueryCoordinator();
   initStreamer();
   initTooltip();
 

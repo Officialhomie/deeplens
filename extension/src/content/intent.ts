@@ -11,6 +11,7 @@ declare global {
 }
 
 function sendAbort(): void {
+  document.dispatchEvent(new CustomEvent('deeplens:abort'));
   chrome.runtime.sendMessage({ type: MESSAGE.ABORT }).catch(() => {
     /* service worker may be asleep */
   });
@@ -38,4 +39,3 @@ export function initIntentEngine(): () => void {
     onTrigger: dispatchTrigger,
   });
 }
-

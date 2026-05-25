@@ -1,4 +1,6 @@
+import { createSSEParser } from './sseParser';
 import { buildUserMessage, SYSTEM_PROMPTS } from './prompts';
+import { ERROR_CODE, mapHttpError } from '../shared/errors';
 import type { QueryMode, QueryPayload } from '../shared/types';
 import { MESSAGE } from '../shared/types';
 
@@ -36,51 +38,59 @@ export function buildClaudeRequest(payload: QueryPayload): ClaudeRequest {
 
 export type TokenRelay = (msg: {
   type: typeof MESSAGE.TOKEN;
+  queryId: string;
   token?: string;
   done?: boolean;
   error?: string;
 }) => void;
 
-function mapHttpError(status: number, errorType?: string): string {
-  if (status === 401) return errorType === 'authentication_error' ? 'INVALID_KEY' : 'NO_API_KEY';
-  if (status === 429) return 'RATE_LIMIT';
-  if (status === 529) return 'API_OVERLOADED';
-  if (status === 400) return 'BAD_REQUEST';
-  return 'API_ERROR';
-}
-
-/**
- * Stream Anthropic SSE and relay tokens to the content script (TRD §4.5–4.6).
- */
 export async function streamClaudeResponse(
   apiKey: string,
   payload: QueryPayload,
   signal: AbortSignal,
   relay: TokenRelay,
+  isStale: () => boolean,
 ): Promise<void> {
+  const queryId = payload.queryId;
   const request = buildClaudeRequest(payload);
 
-  const response = await fetch(ANTHROPIC_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify(request),
-    signal,
-  });
+  let response: Response;
+  try {
+    response = await fetch(ANTHROPIC_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify(request),
+      signal,
+    });
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') return;
+    if (!isStale()) {
+      relay({
+        type: MESSAGE.TOKEN,
+        queryId,
+        error: ERROR_CODE.NETWORK_ERROR,
+        done: true,
+      });
+    }
+    return;
+  }
 
   if (!response.ok) {
+    if (isStale()) return;
     let errorType: string | undefined;
     try {
       const body = (await response.json()) as { error?: { type?: string } };
       errorType = body.error?.type;
     } catch {
-      /* ignore parse errors */
+      /* ignore */
     }
     relay({
       type: MESSAGE.TOKEN,
+      queryId,
       error: mapHttpError(response.status, errorType),
       done: true,
     });
@@ -89,47 +99,48 @@ export async function streamClaudeResponse(
 
   const reader = response.body?.getReader();
   if (!reader) {
-    relay({ type: MESSAGE.TOKEN, error: 'NETWORK_ERROR', done: true });
+    if (!isStale()) {
+      relay({
+        type: MESSAGE.TOKEN,
+        queryId,
+        error: ERROR_CODE.NETWORK_ERROR,
+        done: true,
+      });
+    }
     return;
   }
 
   const decoder = new TextDecoder();
+  const parser = createSSEParser({
+    onTextDelta(text) {
+      if (isStale() || signal.aborted) return;
+      relay({ type: MESSAGE.TOKEN, queryId, token: text });
+    },
+    onDone() {
+      if (isStale() || signal.aborted) return;
+      relay({ type: MESSAGE.TOKEN, queryId, done: true });
+    },
+  });
 
   try {
     while (true) {
+      if (signal.aborted || isStale()) {
+        await reader.cancel().catch(() => undefined);
+        return;
+      }
       const { done, value } = await reader.read();
       if (done) break;
-
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split('\n').filter((l) => l.startsWith('data: '));
-
-      for (const line of lines) {
-        const data = line.slice(6);
-        if (data === '[DONE]') {
-          relay({ type: MESSAGE.TOKEN, done: true });
-          return;
-        }
-        try {
-          const parsed = JSON.parse(data) as {
-            type?: string;
-            delta?: { text?: string };
-          };
-          const token = parsed.delta?.text;
-          if (token) {
-            relay({ type: MESSAGE.TOKEN, token });
-          }
-          if (parsed.type === 'message_stop') {
-            relay({ type: MESSAGE.TOKEN, done: true });
-            return;
-          }
-        } catch {
-          /* skip malformed SSE line */
-        }
-      }
+      parser.feed(decoder.decode(value, { stream: true }));
     }
-    relay({ type: MESSAGE.TOKEN, done: true });
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') return;
-    relay({ type: MESSAGE.TOKEN, error: 'NETWORK_ERROR', done: true });
+    if (!isStale()) {
+      relay({
+        type: MESSAGE.TOKEN,
+        queryId,
+        error: ERROR_CODE.NETWORK_ERROR,
+        done: true,
+      });
+    }
   }
 }

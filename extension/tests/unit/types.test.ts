@@ -15,6 +15,7 @@ describe('message type guards', () => {
           mode: 'quick',
           triggeredBy: 'hover',
           sessionId: 'abc',
+          queryId: 'query-1',
           context: {
             selectedText: 'test',
             sentenceContext: '',
