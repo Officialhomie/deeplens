@@ -60,6 +60,8 @@ export interface TokenMessage {
   token?: string;
   done?: boolean;
   error?: string;
+  /** Milliseconds until retry is allowed (429 Retry-After) */
+  retryAfterMs?: number;
 }
 
 export interface QueryMessage {
