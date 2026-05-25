@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DeepLens</title>
+    <link rel="stylesheet" href="./popup.css" />
+  </head>
+  <body>
+    <header class="popup-header">
+      <div class="logo" aria-hidden="true">DL</div>
+      <div class="header-text">
+        <h1>Deep<span>Lens</span></h1>
+        <label class="active-toggle">
+          <span id="active-label">Active</span>
+          <input id="enabled" type="checkbox" checked />
+        </label>
+      </div>
+    </header>
+
+    <!-- First-run: no API key -->
+    <section id="view-first-run" class="view" hidden>
+      <div class="banner banner-warn">
+        Add your Anthropic API key to activate DeepLens.
+      </div>
+      <label class="field">
+        <span>API key</span>
+        <input
+          id="api-key-first"
+          type="password"
+          autocomplete="off"
+          placeholder="Paste sk-ant-api-key here"
+        />
+        <small>
+          <a href="https://console.anthropic.com/" target="_blank" rel="noopener"
+            >Get a key at console.anthropic.com</a
+          >
+        </small>
+      </label>
+      <p id="key-error-first" class="field-error" hidden></p>
+      <div class="btn-row">
+        <button type="button" id="activate-btn" class="btn btn-primary">
+          Activate
+        </button>
+      </div>
+    </section>
+
+    <!-- Onboarding -->
+    <section id="view-onboarding" class="view" hidden>
+      <p class="section-label">Quick start</p>
+      <div class="onboarding-steps">
+        <div class="step">
+          <span class="step-num step-quick">1</span>
+          <div>
+            <strong>Hover to discover</strong>
+            <p>Pause on any word for 300ms to get context.</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num step-deep">2</span>
+          <div>
+            <strong>Pick your mode</strong>
+            <p>Quick for speed, Deep for full cognitive context.</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num step-links">3</span>
+          <div>
+            <strong>Select text</strong>
+            <p>Highlight a phrase for deeper lookups on demand.</p>
+          </div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button type="button" id="skip-onboarding" class="btn btn-ghost">
+          Skip
+        </button>
+        <button type="button" id="finish-onboarding" class="btn btn-primary">
+          You're ready
+        </button>
+      </div>
+    </section>
+
+    <!-- Configured settings -->
+    <section id="view-settings" class="view" hidden>
+      <label class="field">
+        <span>Anthropic API key</span>
+        <input
+          id="api-key"
+          type="password"
+          autocomplete="off"
+          placeholder="sk-ant-…"
+        />
+        <small id="key-hint">Stored locally only. Never sent to DeepLens servers.</small>
+      </label>
+      <p id="key-error" class="field-error" hidden></p>
+
+      <div class="field">
+        <span>Default mode</span>
+        <div class="segmented" role="group" aria-label="Default mode">
+          <button type="button" class="seg-btn" data-mode="quick">Quick</button>
+          <button type="button" class="seg-btn" data-mode="deep">Deep</button>
+        </div>
+      </div>
+
+      <label class="field">
+        <span>Hover delay — <output id="hover-delay-value">300</output> ms</span>
+        <input
+          id="hover-delay"
+          type="range"
+          min="200"
+          max="800"
+          step="50"
+          value="300"
+        />
+      </label>
+
+      <div class="field triggers">
+        <span>Trigger methods</span>
+        <label class="toggle-row">
+          <span>Hover</span>
+          <input id="hover-enabled" type="checkbox" checked />
+        </label>
+        <label class="toggle-row">
+          <span>Text selection</span>
+          <input id="selection-enabled" type="checkbox" checked />
+        </label>
+      </div>
+
+      <p id="status" class="status" role="status"></p>
+    </section>
+
+    <footer class="popup-footer">
+      Your text is sent to Anthropic's API to generate responses.
+    </footer>
+
+    <script type="module" src="./popup.ts"></script>
+  </body>
+</html>

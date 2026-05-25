@@ -1,0 +1,2005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeepLens — App Flow</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0a0a0f;
+    --ink2: #1c1c28;
+    --ink3: #2e2e42;
+    --muted: #6b6b85;
+    --muted2: #9898b0;
+    --line: rgba(255,255,255,0.07);
+    --line2: rgba(255,255,255,0.12);
+    --accent: #5b5dff;
+    --accent2: #8b8dff;
+    --accent-glow: rgba(91,93,255,0.25);
+    --teal: #00d4aa;
+    --teal-dim: rgba(0,212,170,0.15);
+    --amber: #f5a623;
+    --amber-dim: rgba(245,166,35,0.12);
+    --coral: #ff6b6b;
+    --coral-dim: rgba(255,107,107,0.12);
+    --green: #4ade80;
+    --green-dim: rgba(74,222,128,0.12);
+    --surface: #13131f;
+    --surface2: #1a1a2e;
+    --surface3: #202035;
+    --card: #16162a;
+    --card2: #1e1e36;
+    --pill-bg: rgba(255,255,255,0.05);
+    --pill-border: rgba(255,255,255,0.1);
+    --r: 10px;
+    --r2: 16px;
+    --r3: 24px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--ink);
+    color: #e2e2f0;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── GRID BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(91,93,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(91,93,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── GLOW ORBS ── */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb-1 { width: 600px; height: 600px; background: rgba(91,93,255,0.08); top: -200px; left: -200px; }
+  .orb-2 { width: 400px; height: 400px; background: rgba(0,212,170,0.06); bottom: 20%; right: -100px; }
+
+  /* ── LAYOUT ── */
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px 80px;
+  }
+
+  /* ── HEADER ── */
+  .site-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 32px 0 48px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 56px;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-mark {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--teal));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -1px;
+  }
+  .logo-name {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .logo-name span { color: var(--accent2); }
+  .doc-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted2);
+    background: var(--pill-bg);
+    border: 1px solid var(--pill-border);
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── PAGE TITLE ── */
+  .page-title {
+    margin-bottom: 64px;
+  }
+  .page-title .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent2);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .page-title h1 {
+    font-size: clamp(36px, 5vw, 56px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    color: #fff;
+  }
+  .page-title h1 em {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    color: var(--accent2);
+    font-weight: 400;
+  }
+  .page-title .desc {
+    margin-top: 16px;
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 560px;
+    line-height: 1.7;
+  }
+
+  /* ── NAV PILLS ── */
+  .flow-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 56px;
+  }
+  .flow-nav a {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--pill-border);
+    background: var(--pill-bg);
+    color: var(--muted2);
+    text-decoration: none;
+    letter-spacing: 0.3px;
+    transition: all 0.2s;
+  }
+  .flow-nav a:hover, .flow-nav a.active {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+    color: var(--accent2);
+  }
+
+  /* ── SECTION ── */
+  .flow-section {
+    margin-bottom: 80px;
+  }
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .section-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent2);
+    background: var(--accent-glow);
+    border: 1px solid rgba(91,93,255,0.3);
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+  }
+  .section-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
+  .section-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* ── FLOW GRID ── */
+  .flow-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line2);
+    border-radius: var(--r2);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .card:hover {
+    border-color: rgba(91,93,255,0.3);
+    transform: translateY(-2px);
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .card:hover::before { opacity: 1; }
+
+  .card-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    margin-bottom: 14px;
+  }
+  .card-icon.accent { background: var(--accent-glow); }
+  .card-icon.teal { background: var(--teal-dim); }
+  .card-icon.amber { background: var(--amber-dim); }
+  .card-icon.coral { background: var(--coral-dim); }
+  .card-icon.green { background: var(--green-dim); }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 6px;
+    letter-spacing: -0.2px;
+  }
+  .card-body {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .card-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-top: 10px;
+    letter-spacing: 0.5px;
+  }
+  .tag-p0 { background: rgba(255,107,107,0.15); color: var(--coral); }
+  .tag-p1 { background: rgba(245,166,35,0.15); color: var(--amber); }
+  .tag-p2 { background: rgba(74,222,128,0.12); color: var(--green); }
+
+  /* ── FLOW STRIP ── */
+  .flow-strip {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    background: var(--card);
+    border: 1px solid var(--line2);
+    border-radius: var(--r2);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .flow-step {
+    flex: 1;
+    padding: 20px 18px;
+    position: relative;
+    border-right: 1px solid var(--line);
+  }
+  .flow-step:last-child { border-right: none; }
+  .flow-step::after {
+    content: '→';
+    position: absolute;
+    right: -11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted2);
+    font-size: 13px;
+    z-index: 2;
+    background: var(--card);
+    padding: 2px;
+  }
+  .flow-step:last-child::after { display: none; }
+
+  .step-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted2);
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+  .step-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .step-body {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .step-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--teal);
+    margin-top: 6px;
+  }
+
+  /* ── STATE DIAGRAM ── */
+  .state-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .state-card {
+    background: var(--card2);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 16px;
+  }
+  .state-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+  }
+  .dot-idle { background: var(--muted2); }
+  .dot-load { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+  .dot-stream { background: var(--accent2); box-shadow: 0 0 8px var(--accent2); }
+  .dot-done { background: var(--teal); box-shadow: 0 0 8px var(--teal); }
+  .dot-error { background: var(--coral); box-shadow: 0 0 8px var(--coral); }
+  .dot-abort { background: var(--muted2); opacity: 0.5; }
+
+  .state-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .state-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .state-trigger {
+    margin-top: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted2);
+  }
+
+  /* ── TOOLTIP MOCKUP ── */
+  .tooltip-mockup {
+    background: var(--surface2);
+    border: 1px solid rgba(91,93,255,0.2);
+    border-radius: var(--r2);
+    padding: 0;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    max-width: 420px;
+  }
+  .tt-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface3);
+  }
+  .tt-word {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    flex: 1;
+  }
+  .tt-modes {
+    display: flex;
+    gap: 3px;
+  }
+  .tt-mode {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 5px;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.4);
+    cursor: pointer;
+  }
+  .tt-mode.on {
+    background: rgba(91,93,255,0.2);
+    border-color: rgba(91,93,255,0.4);
+    color: var(--accent2);
+  }
+  .tt-actions {
+    display: flex;
+    gap: 6px;
+    color: rgba(255,255,255,0.3);
+    font-size: 11px;
+  }
+  .tt-body {
+    padding: 14px;
+    font-size: 13px;
+    color: #c8c8e0;
+    line-height: 1.65;
+  }
+  .tt-body strong {
+    color: #fff;
+    font-weight: 600;
+    display: block;
+    margin: 10px 0 4px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.7;
+  }
+  .tt-body strong:first-child { margin-top: 0; }
+  .tt-link {
+    display: block;
+    font-size: 12px;
+    color: var(--accent2);
+    margin-top: 4px;
+    text-decoration: none;
+  }
+  .tt-footer {
+    padding: 6px 14px;
+    border-top: 1px solid var(--line);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tt-cursor {
+    display: inline-block;
+    width: 2px; height: 13px;
+    background: var(--accent2);
+    animation: blink 1s step-end infinite;
+    vertical-align: middle;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* ── SCREEN MOCKUP ── */
+  .screen-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .screen-card {
+    background: var(--card);
+    border: 1px solid var(--line2);
+    border-radius: var(--r2);
+    padding: 20px;
+  }
+  .screen-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted2);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  /* Popup mockup */
+  .popup-mockup {
+    background: #1a1a2e;
+    border: 1px solid rgba(91,93,255,0.2);
+    border-radius: 12px;
+    width: 100%;
+    overflow: hidden;
+    font-family: -apple-system, sans-serif;
+  }
+  .popup-header {
+    background: #13131f;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .popup-logo {
+    width: 20px; height: 20px;
+    background: linear-gradient(135deg, var(--accent), var(--teal));
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #fff;
+    font-weight: 800;
+  }
+  .popup-name { font-size: 13px; font-weight: 600; color: #fff; }
+  .toggle-wrap {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .toggle {
+    width: 32px; height: 18px;
+    background: var(--accent);
+    border-radius: 9px;
+    position: relative;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    background: #fff;
+    border-radius: 50%;
+    top: 2px; right: 2px;
+    transition: right 0.2s;
+  }
+  .toggle.off { background: var(--muted2); }
+  .toggle.off::after { right: 16px; }
+  .toggle-label { font-size: 11px; color: var(--muted2); }
+
+  .popup-body { padding: 14px 16px; }
+
+  .popup-row {
+    margin-bottom: 14px;
+  }
+  .popup-row-label {
+    font-size: 11px;
+    color: var(--muted2);
+    margin-bottom: 6px;
+    letter-spacing: 0.3px;
+  }
+  .popup-input {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--line2);
+    border-radius: 7px;
+    padding: 8px 10px;
+    color: #e2e2f0;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+  }
+  .popup-seg {
+    display: flex;
+    border: 1px solid var(--line2);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .popup-seg-btn {
+    flex: 1;
+    padding: 6px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted2);
+    cursor: pointer;
+  }
+  .popup-seg-btn.on {
+    background: var(--accent-glow);
+    color: var(--accent2);
+    border-right: 1px solid rgba(91,93,255,0.2);
+  }
+  .popup-slider-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .popup-slider {
+    flex: 1;
+    height: 3px;
+    background: var(--line2);
+    border-radius: 2px;
+    position: relative;
+  }
+  .popup-slider-fill {
+    width: 40%;
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+  .popup-slider-thumb {
+    width: 12px; height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: -4.5px;
+    left: calc(40% - 6px);
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+  .popup-val { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent2); }
+
+  /* ── ERROR STATES ── */
+  .error-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+  }
+  .error-card {
+    background: var(--card2);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 16px;
+  }
+  .error-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    display: inline-block;
+  }
+  .err-auth { background: rgba(255,107,107,0.15); color: var(--coral); }
+  .err-net { background: rgba(245,166,35,0.15); color: var(--amber); }
+  .err-limit { background: rgba(91,93,255,0.15); color: var(--accent2); }
+  .err-busy { background: rgba(0,212,170,0.12); color: var(--teal); }
+
+  .error-msg {
+    font-size: 13px;
+    color: #e2e2f0;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .error-sub {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+  .error-action {
+    font-size: 11px;
+    color: var(--accent2);
+    font-family: 'DM Mono', monospace;
+    cursor: pointer;
+  }
+
+  /* ── JOURNEY MAP ── */
+  .journey {
+    background: var(--card);
+    border: 1px solid var(--line2);
+    border-radius: var(--r2);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .journey-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted2);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .journey-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .journey-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+  .journey-persona {
+    min-width: 80px;
+    text-align: center;
+  }
+  .persona-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    margin: 0 auto 4px;
+  }
+  .persona-name {
+    font-size: 10px;
+    color: var(--muted2);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .journey-steps {
+    flex: 1;
+    display: flex;
+    gap: 0;
+  }
+  .j-step {
+    flex: 1;
+    position: relative;
+    padding: 10px 12px;
+    border-right: 1px solid var(--line);
+  }
+  .j-step:last-child { border-right: none; }
+  .j-phase {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted2);
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .j-action {
+    font-size: 12px;
+    color: #e2e2f0;
+    line-height: 1.4;
+  }
+  .j-emotion {
+    margin-top: 6px;
+    font-size: 14px;
+  }
+  .j-pain {
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--coral);
+    font-style: italic;
+  }
+  .j-gain {
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--teal);
+    font-style: italic;
+  }
+
+  /* ── DECISION TREE ── */
+  .decision-tree {
+    background: var(--card);
+    border: 1px solid var(--line2);
+    border-radius: var(--r2);
+    padding: 24px;
+  }
+
+  .dtree-node {
+    background: var(--surface3);
+    border: 1px solid var(--line2);
+    border-radius: var(--r);
+    padding: 12px 16px;
+    text-align: center;
+    display: inline-block;
+  }
+  .dtree-root {
+    background: var(--accent-glow);
+    border-color: rgba(91,93,255,0.4);
+    color: var(--accent2);
+    font-weight: 600;
+  }
+  .dtree-decision {
+    background: var(--amber-dim);
+    border-color: rgba(245,166,35,0.3);
+    color: var(--amber);
+    font-style: italic;
+  }
+  .dtree-action {
+    background: var(--teal-dim);
+    border-color: rgba(0,212,170,0.25);
+    color: var(--teal);
+  }
+  .dtree-end {
+    background: var(--green-dim);
+    border-color: rgba(74,222,128,0.25);
+    color: var(--green);
+  }
+
+  /* ── DECISION TREE VISUAL ── */
+  .tree-wrap {
+    overflow-x: auto;
+    padding: 8px 0;
+  }
+
+  /* ── MODE COMPARISON ── */
+  .mode-compare {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .mode-card {
+    background: var(--card2);
+    border-radius: var(--r2);
+    overflow: hidden;
+  }
+  .mode-header {
+    padding: 14px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .mode-quick .mode-header { background: rgba(245,166,35,0.1); color: var(--amber); border-bottom: 1px solid rgba(245,166,35,0.15); }
+  .mode-deep .mode-header { background: rgba(91,93,255,0.1); color: var(--accent2); border-bottom: 1px solid rgba(91,93,255,0.15); }
+  .mode-links .mode-header { background: rgba(0,212,170,0.1); color: var(--teal); border-bottom: 1px solid rgba(0,212,170,0.15); }
+  .mode-body { padding: 16px; }
+  .mode-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 12px;
+  }
+  .mode-stat:last-child { border-bottom: none; }
+  .mode-stat-key { color: var(--muted); }
+  .mode-stat-val { color: #e2e2f0; font-family: 'DM Mono', monospace; font-size: 11px; }
+  .mode-output {
+    margin-top: 12px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    border: 1px solid var(--line);
+  }
+  .mode-output strong { color: #e2e2f0; display: block; margin-bottom: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* ── ONBOARDING STEPS ── */
+  .onboard-steps {
+    display: flex;
+    gap: 0;
+    background: var(--card);
+    border: 1px solid var(--line2);
+    border-radius: var(--r2);
+    overflow: hidden;
+  }
+  .ob-step {
+    flex: 1;
+    padding: 24px 20px;
+    border-right: 1px solid var(--line);
+    position: relative;
+  }
+  .ob-step:last-child { border-right: none; }
+  .ob-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .ob-step:nth-child(1) .ob-num { background: var(--accent-glow); color: var(--accent2); border: 1px solid rgba(91,93,255,0.3); }
+  .ob-step:nth-child(2) .ob-num { background: var(--teal-dim); color: var(--teal); border: 1px solid rgba(0,212,170,0.25); }
+  .ob-step:nth-child(3) .ob-num { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,166,35,0.25); }
+  .ob-step:nth-child(4) .ob-num { background: var(--green-dim); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+
+  .ob-title { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+  .ob-body { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  /* ── ARCH OVERVIEW ── */
+  .arch-grid {
+    display: grid;
+    grid-template-columns: 1fr 40px 1fr 40px 1fr;
+    gap: 0;
+    align-items: center;
+  }
+  .arch-box {
+    background: var(--card2);
+    border: 1px solid var(--line2);
+    border-radius: var(--r);
+    padding: 16px;
+  }
+  .arch-arrow {
+    text-align: center;
+    color: var(--muted2);
+    font-size: 18px;
+  }
+  .arch-box-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .arch-box-items {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .arch-box-items li {
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .arch-box-items li::before {
+    content: '';
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--muted2);
+    flex-shrink: 0;
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--line);
+    margin: 56px 0;
+  }
+
+  /* ── FOOTER ── */
+  .doc-footer {
+    border-top: 1px solid var(--line);
+    padding-top: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .footer-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted2);
+  }
+  .footer-links { display: flex; gap: 16px; }
+  .footer-link {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted2);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .footer-link:hover { color: var(--accent2); border-color: var(--accent2); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .wrapper { padding: 0 16px 60px; }
+    .flow-strip, .onboard-steps { flex-direction: column; }
+    .flow-step::after, .ob-step::after { display: none; }
+    .flow-step, .ob-step { border-right: none; border-bottom: 1px solid var(--line); }
+    .flow-step:last-child, .ob-step:last-child { border-bottom: none; }
+    .mode-compare { grid-template-columns: 1fr; }
+    .state-grid { grid-template-columns: repeat(2, 1fr); }
+    .screen-wrap { grid-template-columns: 1fr; }
+    .arch-grid { grid-template-columns: 1fr; gap: 12px; }
+    .arch-arrow { transform: rotate(90deg); }
+    .journey-steps { flex-direction: column; }
+    .j-step { border-right: none; border-bottom: 1px solid var(--line); }
+    .j-step:last-child { border-bottom: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="logo">
+      <div class="logo-mark">DL</div>
+      <div class="logo-name">Deep<span>Lens</span></div>
+    </div>
+    <div class="doc-badge">APP FLOW v1.0</div>
+  </header>
+
+  <!-- PAGE TITLE -->
+  <div class="page-title">
+    <div class="eyebrow">PRODUCT DOCUMENTATION</div>
+    <h1>The Complete<br><em>App Flow</em></h1>
+    <p class="desc">Every screen, state, user journey, and decision point — mapped in full for anyone building on, contributing to, or evaluating DeepLens.</p>
+  </div>
+
+  <!-- NAV PILLS -->
+  <nav class="flow-nav">
+    <a href="#overview" class="active">Overview</a>
+    <a href="#onboarding">Onboarding</a>
+    <a href="#core-flows">Core Flows</a>
+    <a href="#modes">Modes</a>
+    <a href="#tooltip-ui">Tooltip UI</a>
+    <a href="#settings">Settings</a>
+    <a href="#states">System States</a>
+    <a href="#errors">Error Handling</a>
+    <a href="#journeys">User Journeys</a>
+    <a href="#decision">Decision Tree</a>
+  </nav>
+
+  <!-- ════════════════════════════════════
+       0. PRODUCT OVERVIEW
+  ════════════════════════════════════ -->
+  <section class="flow-section" id="overview">
+    <div class="section-label">
+      <span class="section-num">00</span>
+      <div>
+        <div class="section-title">Product Overview</div>
+        <div class="section-sub">What DeepLens is and how all the pieces connect</div>
+      </div>
+    </div>
+
+    <div class="arch-grid" style="margin-bottom:20px">
+      <div class="arch-box">
+        <div class="arch-box-title">🌐 Any Webpage</div>
+        <ul class="arch-box-items">
+          <li>User reads content</li>
+          <li>Hover or select text</li>
+          <li>Intent detected</li>
+          <li>Context extracted</li>
+        </ul>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box" style="border-color:rgba(91,93,255,0.3)">
+        <div class="arch-box-title" style="color:var(--accent2)">🔌 DeepLens Extension</div>
+        <ul class="arch-box-items">
+          <li>Debounce + trigger</li>
+          <li>Prompt builder</li>
+          <li>Service worker relay</li>
+          <li>Shadow DOM tooltip</li>
+        </ul>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box" style="border-color:rgba(0,212,170,0.25)">
+        <div class="arch-box-title" style="color:var(--teal)">🤖 Claude AI</div>
+        <ul class="arch-box-items">
+          <li>Context-aware prompt</li>
+          <li>Streaming response</li>
+          <li>3 response modes</li>
+          <li>Cognitive scaffolding</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="flow-grid">
+      <div class="card">
+        <div class="card-icon teal">🧠</div>
+        <div class="card-title">Cognitive Layer</div>
+        <div class="card-body">Not a dictionary. A thinking partner. Gives mental models, analogies, and contextual relevance — not just definitions.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon accent">⚡</div>
+        <div class="card-title">Zero Interruption</div>
+        <div class="card-body">The tooltip appears inline, streams instantly, and disappears on Escape or click-away. Reading flow is never broken.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon amber">🎛</div>
+        <div class="card-title">Three Response Modes</div>
+        <div class="card-body">Quick (2–3 sentences), Deep (5-section scaffolded response), and Links (4 curated authoritative resources).</div>
+      </div>
+      <div class="card">
+        <div class="card-icon coral">🔐</div>
+        <div class="card-title">BYOK Privacy Model</div>
+        <div class="card-body">Your API key lives in chrome.storage.local only. Zero server-side storage. No query logging. Your reads are private.</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ════════════════════════════════════
+       1. ONBOARDING FLOW
+  ════════════════════════════════════ -->
+  <section class="flow-section" id="onboarding">
+    <div class="section-label">
+      <span class="section-num">01</span>
+      <div>
+        <div class="section-title">Onboarding Flow</div>
+        <div class="section-sub">Install → first tooltip trigger in under 5 minutes</div>
+      </div>
+    </div>
+
+    <div class="onboard-steps" style="margin-bottom:20px">
+      <div class="ob-step">
+        <div class="ob-num">1</div>
+        <div class="ob-title">Install from Chrome Web Store</div>
+        <div class="ob-body">User finds DeepLens on CWS. Reviews permissions: storage, activeTab, api.anthropic.com. One click to install.</div>
+      </div>
+      <div class="ob-step">
+        <div class="ob-num">2</div>
+        <div class="ob-title">Popup auto-opens</div>
+        <div class="ob-body">Extension popup opens automatically on first install. Detects no API key is set. Shows two paths: Add Your Key or Try Hosted.</div>
+      </div>
+      <div class="ob-step">
+        <div class="ob-num">3</div>
+        <div class="ob-title">API key input</div>
+        <div class="ob-body">User pastes their Anthropic key (sk-ant-...). Key is validated with a test ping. Stored in chrome.storage.local only.</div>
+      </div>
+      <div class="ob-step">
+        <div class="ob-num">4</div>
+        <div class="ob-title">3-step walkthrough</div>
+        <div class="ob-body">Brief inline guide: hover demo, mode selector, keyboard shortcut (Alt+D). Extension is live — no page reload needed.</div>
+      </div>
+    </div>
+
+    <!-- Popup mockup -->
+    <div class="screen-wrap">
+      <div class="screen-card">
+        <div class="screen-label">POPUP — DEFAULT STATE</div>
+        <div class="popup-mockup">
+          <div class="popup-header">
+            <div class="popup-logo">DL</div>
+            <div class="popup-name">DeepLens</div>
+            <div class="toggle-wrap">
+              <div class="toggle-label">Active</div>
+              <div class="toggle"></div>
+            </div>
+          </div>
+          <div class="popup-body">
+            <div class="popup-row">
+              <div class="popup-row-label">ANTHROPIC API KEY</div>
+              <div class="popup-input">sk-ant-••••••••••••••••••••</div>
+            </div>
+            <div class="popup-row">
+              <div class="popup-row-label">DEFAULT MODE</div>
+              <div class="popup-seg">
+                <div class="popup-seg-btn">Quick</div>
+                <div class="popup-seg-btn on">Deep</div>
+                <div class="popup-seg-btn">Links</div>
+              </div>
+            </div>
+            <div class="popup-row">
+              <div class="popup-row-label">HOVER DELAY</div>
+              <div class="popup-slider-row">
+                <div class="popup-slider">
+                  <div class="popup-slider-fill"></div>
+                  <div class="popup-slider-thumb"></div>
+                </div>
+                <div class="popup-val">300ms</div>
+              </div>
+            </div>
+            <div class="popup-row">
+              <div class="popup-row-label">TRIGGER METHOD</div>
+              <div class="popup-seg">
+                <div class="popup-seg-btn on">Hover</div>
+                <div class="popup-seg-btn on" style="border-left:1px solid var(--line)">Select</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-card">
+        <div class="screen-label">POPUP — FIRST-RUN (NO KEY)</div>
+        <div class="popup-mockup">
+          <div class="popup-header">
+            <div class="popup-logo">DL</div>
+            <div class="popup-name">DeepLens</div>
+            <div class="toggle-wrap">
+              <div class="toggle-label">Inactive</div>
+              <div class="toggle off"></div>
+            </div>
+          </div>
+          <div class="popup-body">
+            <div style="background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.2);border-radius:8px;padding:12px;margin-bottom:14px">
+              <div style="font-size:12px;color:var(--coral);font-weight:600;margin-bottom:4px">⚠ No API key configured</div>
+              <div style="font-size:11px;color:var(--muted)">Add your Anthropic key to activate DeepLens. Your key is stored locally only.</div>
+            </div>
+            <div class="popup-row">
+              <div class="popup-row-label">YOUR ANTHROPIC API KEY</div>
+              <div class="popup-input" style="color:var(--muted2);font-style:italic">Paste sk-ant-api-key here</div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <div style="flex:1;background:var(--accent);color:#fff;border-radius:7px;padding:8px;text-align:center;font-size:12px;font-weight:600;cursor:pointer">Activate</div>
+              <div style="flex:1;background:var(--teal-dim);border:1px solid rgba(0,212,170,0.2);color:var(--teal);border-radius:7px;padding:8px;text-align:center;font-size:12px;cursor:pointer">Use Hosted</div>
+            </div>
+            <div style="text-align:center;margin-top:10px;font-size:10px;color:var(--muted2)">Get a key at console.anthropic.com</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ════════════════════════════════════
+       2. CORE TRIGGER FLOWS
+  ════════════════════════════════════ -->
+  <section class="flow-section" id="core-flows">
+    <div class="section-label">
+      <span class="section-num">02</span>
+      <div>
+        <div class="section-title">Core Trigger Flows</div>
+        <div class="section-sub">The two primary ways a user activates DeepLens</div>
+      </div>
+    </div>
+
+    <!-- Flow A: Hover -->
+    <div style="margin-bottom:14px">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">FLOW A — HOVER TRIGGER</div>
+      <div class="flow-strip">
+        <div class="flow-step">
+          <div class="step-num">01</div>
+          <div class="step-title">User reads</div>
+          <div class="step-body">Mouse moves over dense article, docs, or thread. Normal browsing.</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">02</div>
+          <div class="step-title">Mouse pauses</div>
+          <div class="step-body">Cursor rests on a word. Timer starts at 0ms.</div>
+          <div class="step-time">t = 0ms</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">03</div>
+          <div class="step-title">Debounce fires</div>
+          <div class="step-body">300ms threshold passed. Word extracted via caretRangeFromPoint.</div>
+          <div class="step-time">t = 300ms</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">04</div>
+          <div class="step-title">Context built</div>
+          <div class="step-body">Sentence, heading, page title, domain category extracted.</div>
+          <div class="step-time">t = 310ms</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">05</div>
+          <div class="step-title">Tooltip opens</div>
+          <div class="step-body">Shadow DOM tooltip injected below cursor. Skeleton shown.</div>
+          <div class="step-time">t = 360ms</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">06</div>
+          <div class="step-title">AI streams in</div>
+          <div class="step-body">Tokens appear word-by-word. User reads in real time.</div>
+          <div class="step-time">TTFT &lt;800ms</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flow B: Select -->
+    <div style="margin-bottom:24px">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--teal);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">FLOW B — SELECTION TRIGGER</div>
+      <div class="flow-strip">
+        <div class="flow-step">
+          <div class="step-num">01</div>
+          <div class="step-title">User selects text</div>
+          <div class="step-body">Click-drag or double-click highlights a word, phrase, or sentence.</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">02</div>
+          <div class="step-title">mouseup fires</div>
+          <div class="step-body">Event listener catches mouseup. Selection text extracted via window.getSelection().</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">03</div>
+          <div class="step-title">Validation</div>
+          <div class="step-body">Min 3 chars, max 500 chars. Not inside exclusion zone (input, textarea, contenteditable).</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">04</div>
+          <div class="step-title">Tooltip anchors</div>
+          <div class="step-body">Tooltip appears at end of selection bounding rect. Auto-flips if near viewport edge.</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">05</div>
+          <div class="step-title">Full phrase context</div>
+          <div class="step-body">Richer context injection since phrase &gt; single word. Better AI output.</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">06</div>
+          <div class="step-title">Response streams</div>
+          <div class="step-body">User can pin, copy, change mode, or dismiss without losing reading position.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exclusion zones -->
+    <div class="flow-grid">
+      <div class="card">
+        <div class="card-icon coral">🚫</div>
+        <div class="card-title">Exclusion Zones</div>
+        <div class="card-body">DeepLens never triggers inside: input fields, textareas, select dropdowns, buttons, contenteditable divs, or any element with role="textbox". Code blocks excluded by default, opt-in via settings.</div>
+        <div class="card-tag tag-p0">P0 — hard requirement</div>
+      </div>
+      <div class="card">
+        <div class="card-icon amber">⌨️</div>
+        <div class="card-title">Keyboard Trigger (Alt+D)</div>
+        <div class="card-body">With any text selected, pressing Alt+D immediately triggers Deep mode. User-configurable. Useful on pages where hover is unreliable.</div>
+        <div class="card-tag tag-p1">P1</div>
+      </div>
+      <div class="card">
+        <div class="card-icon green">🌐</div>
+        <div class="card-title">Domain Blacklist</div>
+        <div class="card-body">Users can silence DeepLens on specific domains: banking sites, email, internal tools, password managers. Added via settings popup. Checked before any event listener fires.</div>
+        <div class="card-tag tag-p1">P1</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ════════════════════════════════════
+       3. RESPONSE MODES
+  ════════════════════════════════════ -->
+  <section class="flow-section" id="modes">
+    <div class="section-label">
+      <span class="section-num">03</span>
+      <div>
+        <div class="section-title">The Three Response Modes</div>
+        <div class="section-sub">Quick / Deep / Links — each optimised for a different cognitive need</div>
+      </div>
+    </div>
+
+    <div class="mode-compare">
+      <div class="mode-card mode-quick">
+        <div class="mode-header">⚡ Quick Mode</div>
+        <div class="mode-body">
+          <div class="mode-stat"><span class="mode-stat-key">Max tokens</span><span class="mode-stat-val">200</span></div>
+          <div class="mode-stat"><span class="mode-stat-key">Avg response</span><span class="mode-stat-val">&lt; 3s</span></div>
+          <div class="mode-stat"><span class="mode-stat-key">Format</span><span class="mode-stat-val">prose only</span></div>
+          <div class="mode-stat"><span class="mode-stat-key">Best for</span><span class="mode-stat-val">skimmers</span></div>
+          <div class="mode-output">
+            <strong>Output shape</strong>
+            One crisp paragraph. What it is + why it matters here. No headers, no links, no lists. Like a colleague whispering over your shoulder.
+          </div>
+        </div>
+      </div>
+      <div class="mode-card mode-deep">
+        <div class="mode-header">🧠 Deep Mode</div>
+        <div class="mode-body">
+          <div class="mode-stat"><span class="mode-stat-key">Max tokens</span><span class="mode-stat-val">600</span></div>
+          <div class="mode-stat"><span class="mode-stat-key">Avg response</span><span class="mode-stat-val">&lt; 6s</span></div>
+          <div class="mode-stat"><span class="mode-stat-key">Format</span><span class="mode-stat-val">5 sections</span></div>
+          <div class="mode-stat"><span class="mode-stat-key">Best for</span><span class="mode-stat-val">researchers</span></div>
+          <div class="mode-output">
+            <strong>Output shape</strong>
+            What it is → Mental model → Why it matters here → Related concepts → Go deeper (links). Full cognitive scaffolding.
+          </div>
+        </div>
+      </div>
+      <div class="mode-card mode-links">
+        <div class="mode-header">🔗 Links Mode</div>
+        <div class="mode-body">
+          <div class="mode-stat"><span class="mode-stat-key">Max tokens</span><span class="mode-stat-val">400</span></div>
+          <div class="mode-stat"><span class="mode-stat-key">Avg response</span><span class="mode-stat-val">&lt; 4s</span></div>
+          <div class="mode-stat"><span class="mode-stat-key">Format</span><span class="mode-stat-val">4 links</span></div>
+          <div class="mode-stat"><span class="mode-stat-key">Best for</span><span class="mode-stat-val">going deeper</span></div>
+          <div class="mode-output">
+            <strong>Output shape</strong>
+            Exactly 4 resources: official docs first, then academic, then canonical blogs. Each with a one-sentence description of what you'll find.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode switch flow -->
+    <div class="journey" style="margin-bottom:0">
+      <div class="journey-title">MODE SWITCHING DURING STREAM</div>
+      <div class="flow-strip" style="border:none;background:transparent">
+        <div class="flow-step" style="background:var(--surface3);border-radius:8px;border:1px solid var(--line)">
+          <div class="step-num">USER ACTION</div>
+          <div class="step-title">Streaming in Deep mode</div>
+          <div class="step-body">Response is mid-stream. User taps "Quick" mode button.</div>
+        </div>
+        <div class="flow-step" style="background:var(--surface3);border-radius:8px;border:1px solid var(--line)">
+          <div class="step-num">SYSTEM</div>
+          <div class="step-title">Abort current request</div>
+          <div class="step-body">AbortController.abort() called. Service worker cancels fetch. No more tokens.</div>
+        </div>
+        <div class="flow-step" style="background:var(--surface3);border-radius:8px;border:1px solid var(--line)">
+          <div class="step-num">SYSTEM</div>
+          <div class="step-title">Buffer cleared</div>
+          <div class="step-body">Stream buffer reset. Tooltip body cleared. Status → loading.</div>
+        </div>
+        <div class="flow-step" style="background:var(--surface3);border-radius:8px;border:1px solid var(--line)">
+          <div class="step-num">SYSTEM</div>
+          <div class="step-title">New request sent</div>
+          <div class="step-body">Same context payload, new mode. Quick system prompt applied. Fresh stream begins.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ════════════════════════════════════
+       4. TOOLTIP UI
+  ════════════════════════════════════ -->
+  <section class="flow-section" id="tooltip-ui">
+    <div class="section-label">
+      <span class="section-num">04</span>
+      <div>
+        <div class="section-title">Tooltip UI — All States</div>
+        <div class="section-sub">Every visual state the tooltip can be in</div>
+      </div>
+    </div>
+
+    <div class="screen-wrap" style="grid-template-columns:repeat(3,1fr)">
+
+      <!-- Skeleton state -->
+      <div class="screen-card">
+        <div class="screen-label">STATE — LOADING</div>
+        <div class="tooltip-mockup">
+          <div class="tt-header">
+            <div class="tt-word">eigenvalue</div>
+            <div class="tt-modes">
+              <div class="tt-mode">Q</div>
+              <div class="tt-mode on">D</div>
+              <div class="tt-mode">L</div>
+            </div>
+            <div class="tt-actions">📌 ⎘ ✕</div>
+          </div>
+          <div class="tt-body">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="height:10px;background:rgba(255,255,255,0.06);border-radius:4px;width:90%;animation:pulse 1.5s ease-in-out infinite"></div>
+              <div style="height:10px;background:rgba(255,255,255,0.06);border-radius:4px;width:75%;animation:pulse 1.5s ease-in-out infinite 0.15s"></div>
+              <div style="height:10px;background:rgba(255,255,255,0.06);border-radius:4px;width:85%;animation:pulse 1.5s ease-in-out infinite 0.3s"></div>
+            </div>
+          </div>
+          <div class="tt-footer">⏳ Thinking…</div>
+        </div>
+      </div>
+
+      <!-- Streaming state -->
+      <div class="screen-card">
+        <div class="screen-label">STATE — STREAMING (DEEP MODE)</div>
+        <div class="tooltip-mockup">
+          <div class="tt-header">
+            <div class="tt-word">eigenvalue</div>
+            <div class="tt-modes">
+              <div class="tt-mode">Q</div>
+              <div class="tt-mode on">D</div>
+              <div class="tt-mode">L</div>
+            </div>
+            <div class="tt-actions">📌 ⎘ ✕</div>
+          </div>
+          <div class="tt-body">
+            <strong>What it is</strong>
+            A scalar value that, when a linear transformation is applied to a vector, only scales it without rotating it. In matrix terms, Av = λv where λ is the eigenvalue.<span class="tt-cursor"></span>
+          </div>
+          <div class="tt-footer">✦ Streaming…</div>
+        </div>
+      </div>
+
+      <!-- Complete state -->
+      <div class="screen-card">
+        <div class="screen-label">STATE — COMPLETE (DEEP MODE)</div>
+        <div class="tooltip-mockup" style="max-height:340px;overflow-y:auto">
+          <div class="tt-header">
+            <div class="tt-word">eigenvalue</div>
+            <div class="tt-modes">
+              <div class="tt-mode">Q</div>
+              <div class="tt-mode on">D</div>
+              <div class="tt-mode">L</div>
+            </div>
+            <div class="tt-actions">📌 ⎘ ✕</div>
+          </div>
+          <div class="tt-body">
+            <strong>What it is</strong>
+            A scalar value λ such that Av = λv — when a matrix A acts on a vector v, it only stretches or shrinks it, never rotates.
+            <strong>Mental model</strong>
+            Think of it as: the "natural frequency" of a matrix. Just as a guitar string vibrates at specific frequencies, a matrix has specific directions it stretches without rotating. Those stretch factors are eigenvalues.
+            <strong>Why it matters here</strong>
+            In this PCA context, eigenvalues tell you how much variance each principal component captures — larger eigenvalue = more information.
+            <strong>Related concepts</strong>
+            Eigenvectors · PCA · Singular Value Decomposition
+            <strong>Go deeper</strong>
+            <a class="tt-link" href="#">3Blue1Brown: Eigenvectors and Eigenvalues</a>
+            <a class="tt-link" href="#">MIT 18.06 Linear Algebra (Gilbert Strang)</a>
+          </div>
+          <div class="tt-footer">✓ Done · 38 words/sec</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Positioning rules -->
+    <div class="flow-grid" style="margin-top:16px">
+      <div class="card">
+        <div class="card-icon accent">📍</div>
+        <div class="card-title">Auto-Positioning Logic</div>
+        <div class="card-body">Default: 12px below cursor. If bottom overflow → flip above. If right overflow → shift left. If both → bottom-left of cursor. Anchors to selection end rect for multi-word selects.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon teal">📌</div>
+        <div class="card-title">Pin / Expand Mode</div>
+        <div class="card-body">Clicking the pin icon locks the tooltip open and expands it to 480px width and 600px max-height. Pinned tooltips slide in from the right and stay visible even as mouse moves. Dismiss via X only.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon amber">🌓</div>
+        <div class="card-title">Dark Mode Detection</div>
+        <div class="card-body">Priority order: (1) OS prefers-color-scheme, (2) page background luminance check. Tooltip theme switches automatically. All colors defined per theme in Shadow DOM :host scope.</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ════════════════════════════════════
+       5. SETTINGS FLOW
+  ════════════════════════════════════ -->
+  <section class="flow-section" id="settings">
+    <div class="section-label">
+      <span class="section-num">05</span>
+      <div>
+        <div class="section-title">Settings Flow</div>
+        <div class="section-sub">Everything configurable and how it maps to behavior</div>
+      </div>
+    </div>
+
+    <div class="flow-grid">
+      <div class="card">
+        <div class="card-icon accent">🔑</div>
+        <div class="card-title">API Key Management</div>
+        <div class="card-body">Input field in popup. On save: validated with test ping to Anthropic API. Stored in chrome.storage.local only. Never exposed to page context. Can be cleared (extension deactivates).</div>
+        <div class="card-tag tag-p0">P0</div>
+      </div>
+      <div class="card">
+        <div class="card-icon teal">🎚</div>
+        <div class="card-title">Hover Delay</div>
+        <div class="card-body">Slider: 200ms–800ms. Default 300ms. Lower = more responsive (may trigger accidentally on fast reads). Higher = more intentional (better for power-readers). Stored in chrome.storage.local.</div>
+        <div class="card-tag tag-p1">P1</div>
+      </div>
+      <div class="card">
+        <div class="card-icon amber">🎯</div>
+        <div class="card-title">Default Mode</div>
+        <div class="card-body">Segmented control: Quick / Deep / Links. Persists across sessions. Overridable per-session by clicking mode toggle in tooltip. Deep is the default default.</div>
+        <div class="card-tag tag-p1">P1</div>
+      </div>
+      <div class="card">
+        <div class="card-icon coral">🚫</div>
+        <div class="card-title">Domain Blacklist</div>
+        <div class="card-body">Text input: add domain (e.g. mail.google.com). Extension is completely silent on blacklisted domains — no listeners fire, no tooltip can appear. Default list: notion.so, mail.google.com.</div>
+        <div class="card-tag tag-p1">P1</div>
+      </div>
+      <div class="card">
+        <div class="card-icon green">⌨️</div>
+        <div class="card-title">Keyboard Shortcut</div>
+        <div class="card-body">Configure trigger key combo (default: Alt+D). Works on any selected text to immediately fire Deep mode, bypassing hover. Useful on complex SPAs where hover is erratic.</div>
+        <div class="card-tag tag-p1">P1</div>
+      </div>
+      <div class="card">
+        <div class="card-icon teal">🌍</div>
+        <div class="card-title">Output Language</div>
+        <div class="card-body">Dropdown: ISO 639-1 language codes. Default: English. User can receive AI responses in French, Yoruba, Arabic, etc. Injected into system prompt as final instruction.</div>
+        <div class="card-tag tag-p2">P2</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ════════════════════════════════════
+       6. SYSTEM STATES
+  ════════════════════════════════════ -->
+  <section class="flow-section" id="states">
+    <div class="section-label">
+      <span class="section-num">06</span>
+      <div>
+        <div class="section-title">System States</div>
+        <div class="section-sub">All states the extension can be in and valid transitions between them</div>
+      </div>
+    </div>
+
+    <div class="state-grid" style="margin-bottom:24px">
+      <div class="state-card">
+        <div class="state-dot dot-idle"></div>
+        <div class="state-name">IDLE</div>
+        <div class="state-desc">Extension is active. Event listeners registered. Waiting for user intent. No tooltip visible. Zero resource consumption.</div>
+        <div class="state-trigger">Entry: install · page load · tooltip dismissed</div>
+      </div>
+      <div class="state-card">
+        <div class="state-dot dot-load"></div>
+        <div class="state-name">LOADING</div>
+        <div class="state-desc">Trigger fired. Context extracted. Message sent to service worker. Tooltip shows skeleton state. API call in-flight.</div>
+        <div class="state-trigger">Entry: hover 300ms · mouseup on selection</div>
+      </div>
+      <div class="state-card">
+        <div class="state-dot dot-stream"></div>
+        <div class="state-name">STREAMING</div>
+        <div class="state-desc">First token received. Tokens rendering into tooltip body in real time. User is reading response. Mode toggle is live.</div>
+        <div class="state-trigger">Entry: first DEEPLENS_TOKEN received</div>
+      </div>
+      <div class="state-card">
+        <div class="state-dot dot-done"></div>
+        <div class="state-name">DONE</div>
+        <div class="state-desc">message_stop event received. Full response rendered. Streaming cursor hidden. Copy + pin actions available.</div>
+        <div class="state-trigger">Entry: message_stop or done:true token</div>
+      </div>
+      <div class="state-card">
+        <div class="state-dot dot-error"></div>
+        <div class="state-name">ERROR</div>
+        <div class="state-desc">API error, network failure, or invalid key. Error card shown inside tooltip with recovery action. No retry loop — user-initiated only.</div>
+        <div class="state-trigger">Entry: error token or fetch exception</div>
+      </div>
+      <div class="state-card">
+        <div class="state-dot dot-abort"></div>
+        <div class="state-name">ABORTED</div>
+        <div class="state-desc">User moved off word before 300ms, pressed Escape, or clicked away mid-stream. AbortController fires. No error shown. Silent return to idle.</div>
+        <div class="state-trigger">Entry: mouseleave · Escape · click-away</div>
+      </div>
+    </div>
+
+    <!-- Transition table -->
+    <div class="journey">
+      <div class="journey-title">VALID STATE TRANSITIONS</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px">
+        <div style="padding:10px;background:var(--surface3);border-radius:8px;border-left:2px solid var(--muted2)">
+          <div style="color:var(--muted2);font-family:'DM Mono',monospace;font-size:10px;margin-bottom:4px">IDLE →</div>
+          <div style="color:#e2e2f0">→ LOADING (trigger fires)</div>
+        </div>
+        <div style="padding:10px;background:var(--surface3);border-radius:8px;border-left:2px solid var(--amber)">
+          <div style="color:var(--amber);font-family:'DM Mono',monospace;font-size:10px;margin-bottom:4px">LOADING →</div>
+          <div style="color:#e2e2f0">→ STREAMING (first token)<br>→ ERROR (API fail)<br>→ ABORTED (user dismiss)</div>
+        </div>
+        <div style="padding:10px;background:var(--surface3);border-radius:8px;border-left:2px solid var(--accent2)">
+          <div style="color:var(--accent2);font-family:'DM Mono',monospace;font-size:10px;margin-bottom:4px">STREAMING →</div>
+          <div style="color:#e2e2f0">→ DONE (message_stop)<br>→ ERROR (mid-stream fail)<br>→ LOADING (mode switch)<br>→ ABORTED (dismiss)</div>
+        </div>
+        <div style="padding:10px;background:var(--surface3);border-radius:8px;border-left:2px solid var(--teal)">
+          <div style="color:var(--teal);font-family:'DM Mono',monospace;font-size:10px;margin-bottom:4px">DONE →</div>
+          <div style="color:#e2e2f0">→ IDLE (tooltip dismiss)<br>→ LOADING (mode switch)</div>
+        </div>
+        <div style="padding:10px;background:var(--surface3);border-radius:8px;border-left:2px solid var(--coral)">
+          <div style="color:var(--coral);font-family:'DM Mono',monospace;font-size:10px;margin-bottom:4px">ERROR →</div>
+          <div style="color:#e2e2f0">→ LOADING (retry button)<br>→ IDLE (dismiss)</div>
+        </div>
+        <div style="padding:10px;background:var(--surface3);border-radius:8px;border-left:2px solid var(--muted2)">
+          <div style="color:var(--muted2);font-family:'DM Mono',monospace;font-size:10px;margin-bottom:4px">ABORTED →</div>
+          <div style="color:#e2e2f0">→ IDLE (only valid transition)<br>Shadow DOM destroyed</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ════════════════════════════════════
+       7. ERROR HANDLING
+  ════════════════════════════════════ -->
+  <section class="flow-section" id="errors">
+    <div class="section-label">
+      <span class="section-num">07</span>
+      <div>
+        <div class="section-title">Error States and Recovery</div>
+        <div class="section-sub">Every failure mode with explicit user-facing message and recovery path</div>
+      </div>
+    </div>
+
+    <div class="error-grid">
+      <div class="error-card">
+        <div class="error-tag err-auth">NO_API_KEY</div>
+        <div class="error-msg">No API key configured</div>
+        <div class="error-sub">Extension activated without API key. Happens when user dismisses onboarding early.</div>
+        <div class="error-action">→ Open settings [button]</div>
+      </div>
+      <div class="error-card">
+        <div class="error-tag err-auth">INVALID_KEY</div>
+        <div class="error-msg">Invalid API key</div>
+        <div class="error-sub">HTTP 401 from Anthropic. Key may be expired, wrong, or incorrectly pasted.</div>
+        <div class="error-action">→ Check key in settings [button]</div>
+      </div>
+      <div class="error-card">
+        <div class="error-tag err-limit">RATE_LIMIT</div>
+        <div class="error-msg">Too many requests</div>
+        <div class="error-sub">HTTP 429 from Anthropic. Shows retry countdown from Retry-After header. Auto-retries after timer.</div>
+        <div class="error-action">→ Retry in [N]s [countdown]</div>
+      </div>
+      <div class="error-card">
+        <div class="error-tag err-busy">API_OVERLOADED</div>
+        <div class="error-msg">AI is busy right now</div>
+        <div class="error-sub">HTTP 529. Anthropic servers overloaded. Auto-retries once after 3s. If fails again, shows manual retry.</div>
+        <div class="error-action">→ Retry [button] · auto in 3s</div>
+      </div>
+      <div class="error-card">
+        <div class="error-tag err-net">NETWORK_ERROR</div>
+        <div class="error-msg">No connection</div>
+        <div class="error-sub">Fetch failed entirely. Network offline or DNS failure. User must fix connectivity themselves.</div>
+        <div class="error-action">→ Check your connection</div>
+      </div>
+      <div class="error-card">
+        <div class="error-tag err-auth">SW_TERMINATED</div>
+        <div class="error-msg">Connection lost mid-stream</div>
+        <div class="error-sub">Chrome terminated service worker between messages (MV3 quirk). Stream is interrupted.</div>
+        <div class="error-action">→ Tap to retry [button]</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ════════════════════════════════════
+       8. USER JOURNEY MAPS
+  ════════════════════════════════════ -->
+  <section class="flow-section" id="journeys">
+    <div class="section-label">
+      <span class="section-num">08</span>
+      <div>
+        <div class="section-title">User Journey Maps</div>
+        <div class="section-sub">How each persona uses DeepLens across a real session</div>
+      </div>
+    </div>
+
+    <div class="journey">
+      <div class="journey-title">JOURNEY MAPS BY PERSONA</div>
+
+      <!-- Temi -->
+      <div class="journey-row">
+        <div class="journey-persona">
+          <div class="persona-avatar" style="background:rgba(91,93,255,0.15)">👨🏾‍💻</div>
+          <div class="persona-name">Temi<br>DeFi Dev</div>
+        </div>
+        <div class="journey-steps">
+          <div class="j-step">
+            <div class="j-phase">DISCOVER</div>
+            <div class="j-action">Reading Uniswap V4 hook docs on GitHub</div>
+            <div class="j-emotion">😐</div>
+            <div class="j-pain">Hits "transient liquidity provision" — half-understands it</div>
+          </div>
+          <div class="j-step">
+            <div class="j-phase">TRIGGER</div>
+            <div class="j-action">Hovers over the phrase for 300ms</div>
+            <div class="j-emotion">🤔</div>
+            <div class="j-action" style="margin-top:4px">Tooltip appears instantly below cursor</div>
+          </div>
+          <div class="j-step">
+            <div class="j-phase">ENGAGE</div>
+            <div class="j-action">Reads Deep mode response — gets the mental model analogy</div>
+            <div class="j-emotion">💡</div>
+            <div class="j-gain">"The analogy clicked. Back to reading."</div>
+          </div>
+          <div class="j-step">
+            <div class="j-phase">CONTINUE</div>
+            <div class="j-action">Dismisses tooltip (Escape), continues reading docs</div>
+            <div class="j-emotion">😊</div>
+            <div class="j-gain">Zero tab switches. Reading flow preserved.</div>
+          </div>
+          <div class="j-step">
+            <div class="j-phase">DEEPEN</div>
+            <div class="j-action">Selects full sentence, uses Links mode to find Uniswap research</div>
+            <div class="j-emotion">🔥</div>
+            <div class="j-gain">Pins tooltip, copies link, opens in new tab</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Adaeze -->
+      <div class="journey-row">
+        <div class="journey-persona">
+          <div class="persona-avatar" style="background:rgba(0,212,170,0.1)">👩🏾‍🎓</div>
+          <div class="persona-name">Adaeze<br>Student</div>
+        </div>
+        <div class="journey-steps">
+          <div class="j-step">
+            <div class="j-phase">DISCOVER</div>
+            <div class="j-action">Reading statistics lecture PDF on browser</div>
+            <div class="j-emotion">😰</div>
+            <div class="j-pain">Paragraph assumes understanding of "heteroscedasticity"</div>
+          </div>
+          <div class="j-step">
+            <div class="j-phase">TRIGGER</div>
+            <div class="j-action">Double-clicks to select the word. Tooltip fires immediately.</div>
+            <div class="j-emotion">👆</div>
+            <div class="j-action" style="margin-top:4px">Quick mode response in 2 seconds</div>
+          </div>
+          <div class="j-step">
+            <div class="j-phase">ENGAGE</div>
+            <div class="j-action">Reads the "explain simply" response — gets it in 20 seconds</div>
+            <div class="j-emotion">😌</div>
+            <div class="j-gain">No tab switch. Reads on without breaking concentration.</div>
+          </div>
+          <div class="j-step">
+            <div class="j-phase">RETURN</div>
+            <div class="j-action">Continues reading. Hits 3 more unknown terms. Same flow.</div>
+            <div class="j-emotion">📖</div>
+            <div class="j-gain">Completes the paper without opening Google once</div>
+          </div>
+          <div class="j-step">
+            <div class="j-phase">HABIT</div>
+            <div class="j-action">Opens DeepLens every study session. Day 7 retention achieved.</div>
+            <div class="j-emotion">⭐</div>
+            <div class="j-gain">Core habit formed — "I can't read without it now"</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kunle -->
+      <div class="journey-row">
+        <div class="journey-persona">
+          <div class="persona-avatar" style="background:rgba(245,166,35,0.1)">👨🏾‍💼</div>
+          <div class="persona-name">Kunle<br>Founder</div>
+        </div>
+        <div class="journey-steps">
+          <div class="j-step">
+            <div class="j-phase">DISCOVER</div>
+            <div class="j-action">Skimming a16z fintech report on market dynamics</div>
+            <div class="j-emotion">⚡</div>
+            <div class="j-pain">Hits "reflexivity in asset pricing" — doesn't want to stop</div>
+          </div>
+          <div class="j-step">
+            <div class="j-phase">TRIGGER</div>
+            <div class="j-action">Hovers 300ms. Already has Quick mode as default.</div>
+            <div class="j-emotion">👆</div>
+            <div class="j-action" style="margin-top:4px">3-sentence answer in 2.5s</div>
+          </div>
+          <div class="j-step">
+            <div class="j-phase">ENGAGE</div>
+            <div class="j-action">Reads Quick response in 8 seconds. Gets the gist.</div>
+            <div class="j-emotion">✅</div>
+            <div class="j-gain">Doesn't need Deep. Dismisses. Keeps reading.</div>
+          </div>
+          <div class="j-step">
+            <div class="j-phase">VELOCITY</div>
+            <div class="j-action">Gets through 4 unfamiliar terms in a single article without stopping</div>
+            <div class="j-emotion">🚀</div>
+            <div class="j-gain">Reading speed maintained. Signal absorbed faster.</div>
+          </div>
+          <div class="j-step">
+            <div class="j-phase">SHARE</div>
+            <div class="j-action">Tells his team about DeepLens after 3 days of daily use</div>
+            <div class="j-emotion">📢</div>
+            <div class="j-gain">Organic growth vector — founder → team word of mouth</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ════════════════════════════════════
+       9. DECISION TREE
+  ════════════════════════════════════ -->
+  <section class="flow-section" id="decision">
+    <div class="section-label">
+      <span class="section-num">09</span>
+      <div>
+        <div class="section-title">Full Decision Tree</div>
+        <div class="section-sub">Every conditional the system evaluates from user action to AI response</div>
+      </div>
+    </div>
+
+    <div class="decision-tree">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted2);letter-spacing:1px;text-transform:uppercase;margin-bottom:20px">DECISION TREE — FULL TRIGGER EVALUATION</div>
+
+      <!-- Level 0 -->
+      <div style="display:flex;justify-content:center;margin-bottom:16px">
+        <div class="dtree-node dtree-root" style="padding:10px 20px;font-size:13px">User hover / select event fires</div>
+      </div>
+
+      <!-- Level 1 arrows -->
+      <div style="display:flex;justify-content:center;gap:80px;margin-bottom:8px">
+        <div style="text-align:center;color:var(--muted2);font-size:11px">↓</div>
+      </div>
+
+      <!-- Level 1 -->
+      <div style="display:flex;justify-content:center;margin-bottom:16px">
+        <div class="dtree-node dtree-decision" style="padding:10px 20px;font-size:12px">Is extension enabled?</div>
+      </div>
+
+      <!-- Level 1 branches -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div style="text-align:right">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--coral);margin-bottom:6px">NO →</div>
+          <div class="dtree-node" style="display:inline-block;background:rgba(255,107,107,0.08);border-color:rgba(255,107,107,0.2);color:var(--coral);font-size:11px;padding:8px 14px">Silent. No action.</div>
+        </div>
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--teal);margin-bottom:6px">YES ↓</div>
+          <div class="dtree-node dtree-decision" style="display:inline-block;font-size:11px;padding:8px 14px">Is domain blacklisted?</div>
+        </div>
+      </div>
+
+      <!-- Level 2 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;padding-left:50%">
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--coral);margin-bottom:6px">YES →</div>
+          <div class="dtree-node" style="display:inline-block;background:rgba(255,107,107,0.08);border-color:rgba(255,107,107,0.2);color:var(--coral);font-size:11px;padding:8px 14px">Silent. No action.</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;padding-right:50%;margin-bottom:6px">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--teal)">NO ↓</div>
+      </div>
+
+      <!-- Level 3 -->
+      <div style="display:flex;justify-content:flex-end;padding-right:48%;margin-bottom:16px">
+        <div class="dtree-node dtree-decision" style="display:inline-block;font-size:11px;padding:8px 14px">Is target in exclusion zone?</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;padding-left:25%">
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--coral);margin-bottom:6px">YES →</div>
+          <div class="dtree-node" style="display:inline-block;background:rgba(255,107,107,0.08);border-color:rgba(255,107,107,0.2);color:var(--coral);font-size:11px;padding:8px 14px">Silent. No action.</div>
+        </div>
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--teal);margin-bottom:6px">NO ↓</div>
+          <div class="dtree-node dtree-decision" style="display:inline-block;font-size:11px;padding:8px 14px">Is it hover or select?</div>
+        </div>
+      </div>
+
+      <!-- Level 4 - two branches -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;padding-left:25%">
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--amber);margin-bottom:6px">HOVER →</div>
+          <div class="dtree-node dtree-decision" style="display:inline-block;font-size:11px;padding:8px 14px">300ms elapsed without leave?</div>
+        </div>
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--amber);margin-bottom:6px">SELECT →</div>
+          <div class="dtree-node dtree-decision" style="display:inline-block;font-size:11px;padding:8px 14px">Text ≥ 3 chars, ≤ 500?</div>
+        </div>
+      </div>
+
+      <!-- Level 5 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;padding-left:25%">
+        <div>
+          <div style="display:flex;gap:12px">
+            <div>
+              <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--coral);margin-bottom:6px">NO →</div>
+              <div class="dtree-node" style="display:inline-block;background:rgba(255,107,107,0.08);border-color:rgba(255,107,107,0.2);color:var(--coral);font-size:11px;padding:8px 12px">Abort. No action.</div>
+            </div>
+            <div>
+              <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--teal);margin-bottom:6px">YES ↓</div>
+              <div class="dtree-node dtree-action" style="display:inline-block;font-size:11px;padding:8px 12px">Extract context</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;gap:12px">
+            <div>
+              <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--coral);margin-bottom:6px">NO →</div>
+              <div class="dtree-node" style="display:inline-block;background:rgba(255,107,107,0.08);border-color:rgba(255,107,107,0.2);color:var(--coral);font-size:11px;padding:8px 12px">Ignore.</div>
+            </div>
+            <div>
+              <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--teal);margin-bottom:6px">YES ↓</div>
+              <div class="dtree-node dtree-action" style="display:inline-block;font-size:11px;padding:8px 12px">Extract context</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Converge -->
+      <div style="display:flex;justify-content:center;margin-bottom:8px">
+        <div style="color:var(--muted2);font-family:'DM Mono',monospace;font-size:11px">↓ both paths converge ↓</div>
+      </div>
+
+      <div style="display:flex;justify-content:center;gap:16px;margin-bottom:16px;flex-wrap:wrap">
+        <div class="dtree-node dtree-action" style="font-size:11px;padding:8px 16px">Show tooltip skeleton</div>
+        <div class="dtree-node dtree-action" style="font-size:11px;padding:8px 16px">Build prompt with context</div>
+        <div class="dtree-node dtree-action" style="font-size:11px;padding:8px 16px">Message service worker</div>
+        <div class="dtree-node dtree-action" style="font-size:11px;padding:8px 16px">Call Claude API (stream)</div>
+      </div>
+
+      <!-- Final branches -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--teal);margin-bottom:6px">SUCCESS →</div>
+          <div class="dtree-node dtree-end" style="display:block;font-size:11px;padding:10px 14px">Tokens stream → tooltip renders → DONE state</div>
+        </div>
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--coral);margin-bottom:6px">API ERROR →</div>
+          <div class="dtree-node" style="display:block;background:rgba(255,107,107,0.08);border-color:rgba(255,107,107,0.2);color:var(--coral);font-size:11px;padding:10px 14px">Error state rendered in tooltip → retry CTA</div>
+        </div>
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted2);margin-bottom:6px">USER ABORTS →</div>
+          <div class="dtree-node" style="display:block;font-size:11px;padding:10px 14px;opacity:0.6">AbortController fires → tooltip destroys → IDLE</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- FOOTER -->
+  <footer class="doc-footer">
+    <div class="footer-meta">DeepLens App Flow v1.0 · 0xVerse / eth-content-architect · May 2026</div>
+    <div class="footer-links">
+      <a class="footer-link" href="#">PRD →</a>
+      <a class="footer-link" href="#">TRD →</a>
+      <a class="footer-link" href="#">GitHub →</a>
+    </div>
+  </footer>
+
+</div>
+
+<style>
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+</style>
+
+</body>
+</html>

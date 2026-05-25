@@ -1,0 +1,270 @@
+/* DeepLens tooltip — Shadow DOM (design brief §3.2–3.3) */
+
+.dl-tooltip {
+  --dl-bg: #ffffff;
+  --dl-text: #111111;
+  --dl-text-muted: #555555;
+  --dl-border: rgba(0, 0, 0, 0.1);
+  --dl-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  --dl-accent: #5b5dff;
+  --dl-accent2: #8b8dff;
+  --dl-amber: #f5a623;
+  --dl-teal: #00d4aa;
+  --dl-coral: #ff6b6b;
+  --dl-link: #4f8ef7;
+  --dl-mode-active-bg: rgba(128, 128, 128, 0.12);
+
+  position: fixed;
+  z-index: 2147483647;
+  width: 380px;
+  max-height: 360px;
+  display: flex;
+  flex-direction: column;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--dl-text);
+  background: var(--dl-bg);
+  border: 1px solid var(--dl-border);
+  border-radius: 10px;
+  box-shadow: var(--dl-shadow);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.dl-tooltip[data-theme='dark'] {
+  --dl-bg: #1e1e1e;
+  --dl-text: #e8e8e8;
+  --dl-text-muted: #9898b0;
+  --dl-border: rgba(255, 255, 255, 0.12);
+  --dl-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --dl-link: #8b8dff;
+  --dl-mode-active-bg: rgba(91, 93, 255, 0.2);
+}
+
+.dl-tooltip.is-pinned {
+  width: 480px;
+  max-height: 600px;
+  border-left: 3px solid var(--dl-accent);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+}
+
+.dl-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--dl-border);
+  flex-shrink: 0;
+}
+
+.dl-word {
+  font-weight: 600;
+  font-size: 13px;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dl-modes {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  justify-content: center;
+}
+
+.dl-mode-btn {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--dl-text-muted);
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.dl-mode-btn:hover {
+  opacity: 1;
+}
+
+.dl-mode-btn.active {
+  opacity: 1;
+  color: var(--dl-text);
+  background: var(--dl-mode-active-bg);
+  border-color: rgba(91, 93, 255, 0.35);
+}
+
+.dl-mode-btn[data-mode='quick'].active {
+  color: var(--dl-amber);
+}
+
+.dl-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.dl-icon-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dl-text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+
+.dl-icon-btn:hover {
+  background: var(--dl-mode-active-bg);
+  color: var(--dl-text);
+}
+
+.dl-icon-btn.is-pinned {
+  color: var(--dl-accent);
+}
+
+.dl-body {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 60px;
+}
+
+.dl-stream {
+  padding: 10px 12px;
+}
+
+.dl-stream p {
+  margin: 0 0 10px;
+}
+
+.dl-stream ul {
+  margin: 0 0 10px;
+  padding-left: 18px;
+}
+
+.dl-stream strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0.7;
+  margin: 12px 0 4px;
+}
+
+.dl-stream a {
+  color: var(--dl-link);
+}
+
+.dl-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--dl-accent);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: dl-blink 1s step-end infinite;
+}
+
+@keyframes dl-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.dl-skeleton {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dl-skel-bar {
+  height: 10px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    rgba(128, 128, 128, 0.15) 25%,
+    rgba(128, 128, 128, 0.25) 50%,
+    rgba(128, 128, 128, 0.15) 75%
+  );
+  background-size: 200% 100%;
+  animation: dl-shimmer 1.2s ease-in-out infinite;
+}
+
+.dl-skel-bar.short {
+  width: 65%;
+}
+
+@keyframes dl-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.dl-error-panel {
+  padding: 12px;
+}
+
+.dl-error-msg {
+  color: var(--dl-coral);
+  font-size: 13px;
+  margin: 0 0 10px;
+}
+
+.dl-error-action {
+  font-size: 12px;
+  color: var(--dl-link);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.dl-footer {
+  padding: 6px 12px 8px;
+  border-top: 1px solid var(--dl-border);
+  flex-shrink: 0;
+}
+
+.dl-status {
+  font-family: ui-monospace, 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--dl-text-muted);
+}
+
+.dl-tooltip[data-status='loading'] .dl-status {
+  color: var(--dl-amber);
+}
+
+.dl-tooltip[data-status='streaming'] .dl-status {
+  color: var(--dl-accent2);
+}
+
+.dl-tooltip[data-status='done'] .dl-status {
+  color: var(--dl-teal);
+}
+
+.dl-tooltip[data-status='error'] .dl-status {
+  color: var(--dl-coral);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-cursor,
+  .dl-skel-bar {
+    animation: none;
+  }
+}
