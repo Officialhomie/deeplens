@@ -44,3 +44,38 @@ export function computePosition(input: PositionInput): PositionResult {
 
   return { top, left, placement };
 }
+
+const PINNED_WIDTH = 480;
+const PINNED_MARGIN = 16;
+
+/** Pinned panel — docked to right viewport edge (design brief §7.5) */
+export function computePinnedPosition(
+  viewport: ViewportSize,
+  panelHeight = 400,
+): PositionResult {
+  const top = Math.max(
+    PINNED_MARGIN,
+    Math.min(
+      (viewport.height - panelHeight) / 2,
+      viewport.height - panelHeight - PINNED_MARGIN,
+    ),
+  );
+  return {
+    top,
+    left: viewport.width - PINNED_WIDTH - PINNED_MARGIN,
+    placement: 'below',
+  };
+}
+
+export function estimateTooltipHeight(
+  isPinned: boolean,
+  status: 'loading' | 'streaming' | 'done' | 'error',
+): number {
+  if (isPinned) return 400;
+  if (status === 'loading') return 160;
+  if (status === 'error') return 140;
+  return 280;
+}
+
+export const TOOLTIP_WIDTH = 380;
+export const TOOLTIP_WIDTH_PINNED = PINNED_WIDTH;
