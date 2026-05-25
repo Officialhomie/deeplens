@@ -33,7 +33,9 @@ npm run zip
 
 See [`md/checklists/cws-submission-checklist.md`](md/checklists/cws-submission-checklist.md), [`md/release/store-listing-cws-paste.md`](md/release/store-listing-cws-paste.md), and [`md/release/SCREENSHOTS.md`](md/release/SCREENSHOTS.md).
 
-**Privacy policy (hosted):** https://officialhomie.github.io/deeplens/privacy/ — deploy via [GitHub Pages](md/release/GITHUB_PAGES.md).
+**Privacy policy (hosted):** https://officialhomie.github.io/deeplens/privacy/
+
+Deploy: pushes to **`main`** that touch `docs/**` redeploy automatically; edits on **`dev`** must be merged to **`main`** (see [GitHub Pages guide](md/release/GITHUB_PAGES.md) and [AGENTS.md](AGENTS.md)).
 
 ### App flow doc
 
@@ -51,6 +53,7 @@ open deeplens-app-flow.html
 | **Release notes** | [`md/release/RELEASE_NOTES-v1.0.0.md`](md/release/RELEASE_NOTES-v1.0.0.md) |
 | **Privacy policy** | [`md/privacy/privacy-policy.md`](md/privacy/privacy-policy.md) |
 | **Agent guide** | [`AGENTS.md`](AGENTS.md) |
+| **GitHub Pages deploy** | [`md/release/GITHUB_PAGES.md`](md/release/GITHUB_PAGES.md) |
 
 ## Project Status
 
