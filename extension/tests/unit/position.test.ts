@@ -59,4 +59,26 @@ describe('computePosition', () => {
     expect(result.left).toBeGreaterThanOrEqual(8);
     expect(result.left + 280).toBeLessThanOrEqual(292);
   });
+
+  it('shifts left when tooltip overflows right edge', () => {
+    const result = computePosition({
+      triggerRect: rect(100, 1100, 40, 20),
+      tooltipWidth: 280,
+      tooltipHeight: 120,
+      viewport: { width: 1200, height: 800 },
+    });
+    expect(result.left + 280).toBeLessThanOrEqual(1192);
+  });
+
+  it('chooses placement when vertical space is constrained', () => {
+    const result = computePosition({
+      triggerRect: rect(390, 400, 40, 20),
+      tooltipWidth: 280,
+      tooltipHeight: 400,
+      viewport: { width: 1200, height: 800 },
+    });
+    expect(['above', 'below']).toContain(result.placement);
+    expect(result.left).toBeGreaterThanOrEqual(8);
+    expect(result.left + 280).toBeLessThanOrEqual(1192);
+  });
 });
