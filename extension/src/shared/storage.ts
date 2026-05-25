@@ -10,6 +10,7 @@ export interface DeepLensStorage {
   isEnabled: boolean;
   outputLanguage: string;
   installedAt: number;
+  onboardingComplete: boolean;
 }
 
 export type PublicSettings = Omit<DeepLensStorage, 'apiKey'>;
@@ -24,6 +25,7 @@ const DEFAULTS: DeepLensStorage = {
   isEnabled: true,
   outputLanguage: 'en',
   installedAt: Date.now(),
+  onboardingComplete: false,
 };
 
 function chromeStorage(): chrome.storage.LocalStorageArea {
