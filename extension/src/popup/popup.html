@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DeepLens</title>
+    <link rel="stylesheet" href="./popup.css" />
+  </head>
+  <body>
+    <header class="popup-header">
+      <div class="logo" aria-hidden="true">DL</div>
+      <h1>Deep<span>Lens</span></h1>
+    </header>
+    <main class="popup-body">
+      <label class="field">
+        <span>Anthropic API key</span>
+        <input
+          id="api-key"
+          type="password"
+          autocomplete="off"
+          placeholder="sk-ant-…"
+        />
+        <small>Stored locally only. Never sent to DeepLens servers.</small>
+      </label>
+      <label class="field toggle-row">
+        <span>Extension enabled</span>
+        <input id="enabled" type="checkbox" checked />
+      </label>
+      <label class="field">
+        <span>Default mode</span>
+        <select id="default-mode">
+          <option value="quick">Quick</option>
+          <option value="deep" selected>Deep</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Hover delay (ms)</span>
+        <input id="hover-delay" type="range" min="200" max="800" step="50" value="300" />
+        <output id="hover-delay-value">300</output>
+      </label>
+      <p id="status" class="status" role="status"></p>
+    </main>
+    <script type="module" src="./popup.ts"></script>
+  </body>
+</html>
