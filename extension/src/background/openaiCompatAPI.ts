@@ -2,6 +2,7 @@
 import { buildUserMessage, SYSTEM_PROMPTS } from './prompts';
 import { ERROR_CODE, mapHttpError } from '../shared/errors';
 import { parseRetryAfter } from '../shared/retryAfter';
+import { safeDebug } from '../shared/safeLog';
 import type { LLMProvider, QueryMode, QueryPayload } from '../shared/types';
 import { MESSAGE } from '../shared/types';
 import type { TokenRelay } from './claudeAPI';
@@ -13,7 +14,7 @@ const PROVIDER_URLS: Record<'groq' | 'openrouter', string> = {
 
 const PROVIDER_MODELS: Record<'groq' | 'openrouter', string> = {
   groq: 'llama-3.3-70b-versatile',
-  openrouter: 'meta-llama/llama-3.1-8b-instruct:free',
+  openrouter: 'meta-llama/llama-3.3-70b-instruct:free',
 };
 
 export const OPENAI_COMPAT_MAX_TOKENS: Record<QueryMode, number> = {
@@ -32,6 +33,19 @@ function buildRequest(payload: QueryPayload, model: string): object {
       { role: 'user', content: buildUserMessage(payload.context) },
     ],
   };
+}
+
+/** Extract error type string from a provider's JSON error body (best-effort). */
+async function extractErrorType(response: Response): Promise<string | undefined> {
+  try {
+    const body = (await response.clone().json()) as {
+      error?: { type?: string; code?: string; message?: string };
+    };
+    safeDebug('openai-compat error body', body);
+    return body.error?.type ?? body.error?.code;
+  } catch {
+    return undefined;
+  }
 }
 
 export async function streamOpenAICompatResponse(
@@ -73,7 +87,9 @@ export async function streamOpenAICompatResponse(
 
   if (!response.ok) {
     if (isStale()) return;
-    const code = mapHttpError(response.status, undefined);
+    const errorType = await extractErrorType(response);
+    const code = mapHttpError(response.status, errorType);
+    safeDebug(`${provider} HTTP ${response.status}`, { errorType, code });
     relay({
       type: MESSAGE.TOKEN,
       queryId,
@@ -97,12 +113,15 @@ export async function streamOpenAICompatResponse(
 
   const decoder = new TextDecoder();
   let buffer = '';
+  let hasDone = false;
 
   const processLine = (line: string): void => {
     if (!line.startsWith('data: ')) return;
     const data = line.slice(6).trim();
-    if (!data || data === '[DONE]') {
-      if (!isStale() && !signal.aborted) {
+    if (!data) return;
+    if (data === '[DONE]') {
+      if (!hasDone && !isStale() && !signal.aborted) {
+        hasDone = true;
         relay({ type: MESSAGE.TOKEN, queryId, done: true });
       }
       return;
@@ -110,12 +129,24 @@ export async function streamOpenAICompatResponse(
     try {
       const parsed = JSON.parse(data) as {
         choices?: Array<{ delta?: { content?: string }; finish_reason?: string | null }>;
+        error?: { message?: string; type?: string };
       };
+      // Some providers return an error object inside a 200 SSE stream
+      if (parsed.error && !hasDone && !isStale()) {
+        hasDone = true;
+        const code = mapHttpError(500, parsed.error.type);
+        relay({ type: MESSAGE.TOKEN, queryId, error: code, done: true });
+        return;
+      }
       const choice = parsed.choices?.[0];
       if (!choice) return;
       const text = choice.delta?.content;
       if (text && !isStale() && !signal.aborted) {
         relay({ type: MESSAGE.TOKEN, queryId, token: text });
+      }
+      if (choice.finish_reason && !hasDone && !isStale() && !signal.aborted) {
+        hasDone = true;
+        relay({ type: MESSAGE.TOKEN, queryId, done: true });
       }
     } catch {
       /* skip malformed */
@@ -138,6 +169,10 @@ export async function streamOpenAICompatResponse(
           processLine(line);
         }
       }
+    }
+    // Stream ended without a [DONE] marker — relay done anyway
+    if (!hasDone && !isStale() && !signal.aborted) {
+      relay({ type: MESSAGE.TOKEN, queryId, done: true });
     }
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') return;

@@ -84,6 +84,7 @@ export async function streamGeminiResponse(
 
   const decoder = new TextDecoder();
   let buffer = '';
+  let hasDone = false;
 
   const processLine = (line: string): void => {
     if (!line.startsWith('data: ')) return;
@@ -98,7 +99,8 @@ export async function streamGeminiResponse(
         error?: { message?: string; code?: number };
       };
       if (parsed.error) {
-        if (!isStale()) {
+        if (!hasDone && !isStale()) {
+          hasDone = true;
           const code = mapHttpError(parsed.error.code ?? 500, undefined);
           relay({ type: MESSAGE.TOKEN, queryId, error: code, done: true });
         }
@@ -110,7 +112,8 @@ export async function streamGeminiResponse(
       if (text && !isStale() && !signal.aborted) {
         relay({ type: MESSAGE.TOKEN, queryId, token: text });
       }
-      if (candidate.finishReason && !isStale() && !signal.aborted) {
+      if (candidate.finishReason && !hasDone && !isStale() && !signal.aborted) {
+        hasDone = true;
         relay({ type: MESSAGE.TOKEN, queryId, done: true });
       }
     } catch {
@@ -134,6 +137,9 @@ export async function streamGeminiResponse(
           processLine(line);
         }
       }
+    }
+    if (!hasDone && !isStale() && !signal.aborted) {
+      relay({ type: MESSAGE.TOKEN, queryId, done: true });
     }
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') return;
