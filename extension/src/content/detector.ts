@@ -163,15 +163,11 @@ export function initDetector(options: DetectorOptions): () => void {
 
       const word = getWordAtPoint(e.clientX, e.clientY);
       if (!word) {
-        cancelHoverIntent();
+        clearHoverTimer();
         return;
       }
 
-      if (
-        hoverWord === word &&
-        activeHoverTarget === e.target &&
-        hoverTimer !== null
-      ) {
+      if (hoverWord === word && activeHoverTarget === e.target) {
         return;
       }
 

@@ -254,7 +254,6 @@ export function showTooltip(
   if (shadowDOMManager.host) {
     shadowDOMManager.host.style.cssText =
       'all: initial; position: fixed; inset: 0; z-index: 2147483647; pointer-events: none;';
-    shadowDOMManager.host.style.pointerEvents = 'auto';
   }
 
   if (!tooltipEl) {

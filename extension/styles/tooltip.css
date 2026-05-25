@@ -1,6 +1,7 @@
 /* DeepLens tooltip — Shadow DOM (design brief §3.2–3.3) */
 
 .dl-tooltip {
+  pointer-events: auto;
   --dl-bg: #ffffff;
   --dl-text: #111111;
   --dl-text-muted: #555555;
