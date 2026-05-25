@@ -3,6 +3,9 @@ dist/
 *.local
 .DS_Store
 extension/dist/
+extension/release/
+extension/playwright-report/
+extension/test-results/
 
 # Local commit tooling and snapshots (not shipped)
 .phase1-snapshots/
