@@ -1,24 +1,33 @@
 # DeepLens Extension
 
-Chrome MV3 extension package (Phase 1+).
+Chrome MV3 extension — v1.0.0 release candidate.
 
 ## Commands
 
 ```bash
 npm install
-npm run icons    # generate placeholder icons
-npm run build    # production build → dist/
-npm run dev      # watch build
-npm test         # Vitest unit tests
+npm run icons      # generate PNG icons (16, 48, 128)
+npm run build      # production build → dist/
+npm run dev        # watch build
+npm run test:unit  # Vitest (79 tests)
+npm run test:e2e   # Playwright + loaded extension
+npm test           # unit + e2e
+npm run measure    # TRD §9.1 bundle sizes
+npm run zip        # build + package → release/deeplens-1.0.0.zip
+npm run screenshots  # CWS PNGs → ../docs/store-assets/captured/
 ```
 
-## Load unpacked
+## Load unpacked (development)
 
-1. Run `npm run build`
-2. Open `chrome://extensions`
-3. Enable **Developer mode**
-4. **Load unpacked** → select `extension/dist`
+1. `npm run build`
+2. `chrome://extensions` → Developer mode → **Load unpacked** → `extension/dist`
+
+## Chrome Web Store
+
+1. `npm run zip`
+2. Upload `release/deeplens-1.0.0.zip`
+3. Follow [`md/checklists/cws-submission-checklist.md`](../md/checklists/cws-submission-checklist.md)
 
 ## Structure
 
-See `md/contracts/module-naming-map.md` for module boundaries.
+See [`md/contracts/module-naming-map.md`](../md/contracts/module-naming-map.md).
