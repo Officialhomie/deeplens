@@ -41,11 +41,14 @@ extension/
 │   │   ├── extractor.ts           # F-03 context DOM extraction
 │   │   ├── tooltip.ts             # Tooltip engine (orchestrates shadow + position)
 │   │   ├── streamer.ts            # SSE token → DOM renderer
+│   │   ├── sanitize.ts            # DOMPurify before innerHTML (Phase 7)
 │   │   └── shadowDOM.ts           # Shadow root attach + style injection
 │   ├── background/
 │   │   ├── service-worker.ts      # Entry; message router
 │   │   ├── messageRouter.ts       # DEEPLENS_QUERY / ABORT / TOKEN routing
 │   │   ├── claudeAPI.ts           # Anthropic SSE fetch + AbortController
+│   │   ├── storageSecure.ts       # API key read (background only)
+│   │   ├── trust.ts               # Message sender validation
 │   │   └── prompts.ts             # SYSTEM_PROMPTS + buildUserMessage
 │   ├── popup/
 │   │   ├── popup.html
@@ -55,6 +58,8 @@ extension/
 │       ├── types.ts               # QueryPayload, ExtractedContext, QueryMode, messages
 │       ├── storage.ts               # chrome.storage helpers (no secrets in content)
 │       ├── position.ts            # Viewport tooltip positioning
+│       ├── validatePayload.ts     # Query payload schema + limits (Phase 7)
+│       ├── safeLog.ts             # Dev log secret redaction (Phase 7)
 │       └── debounce.ts
 ├── styles/
 │   └── tooltip.css                # Injected into shadow root
@@ -107,7 +112,11 @@ type: 'DEEPLENS_TOKEN'  // payload: { token, done, error? }
 | `streamer.ts` | Content | Token append to tooltip DOM | Storage reads |
 | `shadowDOM.ts` | Content | Attach shadow, inject CSS | Business logic |
 | `service-worker.ts` | Background | SW lifecycle registration | DOM |
-| `messageRouter.ts` | Background | Route messages, tab replies | Prompt content |
+| `messageRouter.ts` | Background | Route messages, validate payloads, tab replies | Prompt content |
+| `storageSecure.ts` | Background | Read API key | Content/popup export to page |
+| `trust.ts` | Background | Sender id + tab URL checks | DOM |
+| `validatePayload.ts` | Shared | Schema/size/secret checks | Network |
+| `sanitize.ts` | Content | DOMPurify HTML | API calls |
 | `claudeAPI.ts` | Background | SSE stream, abort map | DOM |
 | `prompts.ts` | Background | System prompts + user message build | DOM |
 | `popup.ts` | Popup | Settings UI persistence | Content script APIs |
@@ -121,6 +130,7 @@ type: 'DEEPLENS_TOKEN'  // payload: { token, done, error? }
 | `prompts`, `claudeAPI`, `messageRouter` | **3–4** |
 | `tooltip`, `streamer`, `shadowDOM`, `styles/` | **5** |
 | `popup/` | **6** |
+| `validatePayload`, `safeLog`, `sanitize`, `trust`, `storageSecure` | **7** |
 
 ## Document artifact naming (execution)
 
