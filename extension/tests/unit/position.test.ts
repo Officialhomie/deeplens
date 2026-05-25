@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { computePosition } from '../../src/shared/position';
+import {
+  computePinnedPosition,
+  computePosition,
+} from '../../src/shared/position';
 
 function rect(
   top: number,
@@ -38,6 +41,12 @@ describe('computePosition', () => {
     });
     expect(result.placement).toBe('above');
     expect(result.top).toBeLessThan(750);
+  });
+
+  it('pins panel to right viewport edge', () => {
+    const result = computePinnedPosition({ width: 1200, height: 800 }, 400);
+    expect(result.left).toBeGreaterThan(600);
+    expect(result.top).toBeGreaterThanOrEqual(16);
   });
 
   it('clamps horizontal position inside viewport', () => {
