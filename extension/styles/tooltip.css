@@ -1,0 +1,10 @@
+/* Injected into Shadow DOM — Phase 5 styles */
+:host {
+  all: initial;
+}
+
+.dl-tooltip {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
