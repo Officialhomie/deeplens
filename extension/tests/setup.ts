@@ -40,6 +40,8 @@ beforeEach(() => {
   vi.stubGlobal('chrome', {
     storage: { local: localStorageArea },
     runtime: {
+      id: 'deeplens-test-extension-id',
+      getURL: vi.fn((path: string) => `chrome-extension://deeplens-test/${path}`),
       sendMessage: vi.fn(),
       onMessage: { addListener: vi.fn() },
       lastError: null,
