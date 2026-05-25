@@ -38,7 +38,10 @@ const localStorageArea = {
 beforeEach(() => {
   store = {};
   vi.stubGlobal('chrome', {
-    storage: { local: localStorageArea },
+    storage: {
+      local: localStorageArea,
+      onChanged: { addListener: vi.fn(), removeListener: vi.fn() },
+    },
     runtime: {
       id: 'deeplens-test-extension-id',
       getURL: vi.fn((path: string) => `chrome-extension://deeplens-test/${path}`),

@@ -6,8 +6,13 @@
   "scripts": {
     "dev": "vite build --watch",
     "build": "vite build",
-    "test": "vitest run",
+    "test": "vitest run && npm run test:e2e",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
     "test:watch": "vitest",
+    "measure": "node scripts/measure-bundles.mjs",
+    "prezip": "npm run build",
+    "screenshots": "node scripts/capture-screenshots.mjs",
     "zip": "node scripts/zip.js",
     "icons": "node scripts/generate-icons.mjs"
   },
@@ -19,7 +24,8 @@
     "pngjs": "^7.0.0",
     "typescript": "^5.7.2",
     "vite": "^6.0.3",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "@playwright/test": "^1.49.1"
   },
   "dependencies": {
     "dompurify": "^3.4.5"

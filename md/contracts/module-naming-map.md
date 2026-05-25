@@ -131,6 +131,8 @@ type: 'DEEPLENS_TOKEN'  // payload: { token, done, error? }
 | `tooltip`, `streamer`, `shadowDOM`, `styles/` | **5** |
 | `popup/` | **6** |
 | `validatePayload`, `safeLog`, `sanitize`, `trust`, `storageSecure` | **7** |
+| `settingsCache`, `responseCache`, `renderScheduler`, `retryAfter` | **8** |
+| `tests/e2e/*.spec.ts`, Playwright harness | **9** |
 
 ## Document artifact naming (execution)
 

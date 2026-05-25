@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>DeepLens — Hover streaming</title>
+    <link rel="stylesheet" href="./tooltip-demo.css" />
+    <style>
+      .dl-tooltip {
+        top: 220px;
+        left: 520px;
+      }
+    </style>
+  </head>
+  <body class="scene-page scene-wrap">
+    <article class="scene-article">
+      <h1>Understanding eigenvalues in linear systems</h1>
+      <p>
+        In many engineering problems, the behavior of a dynamical system is
+        determined by the <span class="highlight-word">eigenvalue</span> spectrum
+        of its state matrix. When all eigenvalues lie inside the unit circle,
+        the discrete-time system is stable.
+      </p>
+      <p>
+        Readers often pause here—the term connects spectral theory, stability
+        proofs, and practical control design in a single concept.
+      </p>
+    </article>
+    <div class="dl-tooltip" data-status="streaming">
+      <div class="dl-header">
+        <span class="dl-word">eigenvalue</span>
+        <div class="dl-modes">
+          <button type="button" class="dl-mode-btn active" data-mode="quick">
+            Quick
+          </button>
+          <button type="button" class="dl-mode-btn" data-mode="deep">Deep</button>
+        </div>
+        <div class="dl-actions">
+          <span class="dl-icon-btn">📌</span>
+          <span class="dl-icon-btn">✕</span>
+        </div>
+      </div>
+      <div class="dl-body">
+        <div class="dl-stream">
+          <p>
+            <strong>What it is</strong>
+            A scalar λ such that <em>Av = λv</em> for a square matrix A and
+            nonzero vector v.
+          </p>
+          <p>
+            <strong>In this context</strong>
+            Eigenvalues tell you whether small perturbations grow or decay over
+            time—central to stability analysis in the paragraph you're reading.
+          </p>
+          <span class="dl-cursor"></span>
+        </div>
+      </div>
+      <div class="dl-footer">
+        <span class="dl-status">Streaming…</span>
+      </div>
+    </div>
+  </body>
+</html>

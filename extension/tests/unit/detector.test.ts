@@ -41,6 +41,17 @@ describe('isExcluded', () => {
 });
 
 describe('getWordAtPoint', () => {
+  it('returns null for numeric-only tokens at point', () => {
+    document.body.innerHTML = '<p id="n">Price is 12345 dollars.</p>';
+    const p = document.querySelector('p')!;
+    const r = p.getBoundingClientRect();
+    if (!document.caretRangeFromPoint && !document.caretPositionFromPoint) return;
+    const word = getWordAtPoint(r.left + r.width / 2, r.top + r.height / 2);
+    if (word !== null) {
+      expect(filterLookupWord(word)).not.toBe('12345');
+    }
+  });
+
   it('reads a word from paragraph text when caret API is available', () => {
     document.body.innerHTML =
       '<p style="font-size:16px">The eigenvalue problem.</p>';

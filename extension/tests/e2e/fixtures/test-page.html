@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>DeepLens E2E — test page</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        padding: 2rem;
+        max-width: 640px;
+        line-height: 1.6;
+      }
+      .dark-page {
+        background: #0f0f14;
+        color: #e2e2f0;
+      }
+      input,
+      textarea {
+        display: block;
+        margin: 1rem 0;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>DeepLens fixture</h1>
+    <p id="word-target">
+      The <strong>eigenvalue</strong> problem is central to linear algebra.
+    </p>
+    <p id="select-target">
+      Select this phrase: quantum entanglement for physics context.
+    </p>
+    <input id="input-field" type="text" value="typing here" />
+    <textarea id="text-area">textarea content</textarea>
+    <div id="editable" contenteditable="true">editable region text</div>
+  </body>
+</html>

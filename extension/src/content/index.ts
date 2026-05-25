@@ -1,9 +1,11 @@
 import { initIntentEngine } from './intent';
 import { initQueryCoordinator } from './queryCoordinator';
+import { initSettingsCache } from './settingsCache';
 import { initStreamer } from './streamer';
 import { initTooltip } from './tooltip';
 
-function boot(): void {
+async function boot(): Promise<void> {
+  await initSettingsCache();
   initIntentEngine();
   initQueryCoordinator();
   initStreamer();
@@ -14,4 +16,4 @@ function boot(): void {
   }
 }
 
-boot();
+void boot();

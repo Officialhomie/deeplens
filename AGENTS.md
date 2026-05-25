@@ -2,21 +2,29 @@
 
 ## Source of truth
 
-Build order is defined in **`md/deeplens-implementation-plan.md`**. Do not start feature implementation until **Phase 0** is signed off.
+Build order is defined in **`md/deeplens-implementation-plan.md`**. Phases **0–10** are complete for v1.0 release candidate.
 
 ## Current phase
 
 | Phase | Status | Report |
 |-------|--------|--------|
-| 0 — Program Setup | Done | `md/status/phase-0.md` |
-| 1 — Architecture Foundation | Done | `md/status/phase-1.md` |
-| 2 — Core Interaction Engine | Done | `md/status/phase-2.md` |
-| 3 — Context + Prompt Intelligence | Done | `md/status/phase-3.md` |
-| **4 — Streaming + AI Orchestration** | Done | `md/status/phase-4.md` |
-| **5 — Tooltip UI System** | Done | `md/status/phase-5.md` |
-| **6 — Popup Settings + Configuration** | Done | `md/status/phase-6.md` |
-| **7 — Security + Privacy Hardening** | Done | `md/status/phase-7.md` |
-| **8 — Performance + Resilience** | Not started | — |
+| 0–9 | Done | `md/status/phase-0.md` … `md/status/phase-9.md` |
+| **10 — Release Readiness** | Done | `md/status/phase-10.md` |
+| **11 — Post-v1 Backlog Gate** | Optional | Process gate after CWS submit |
+
+## Release (v1.0.0)
+
+```bash
+cd extension
+npm run zip          # → release/deeplens-1.0.0.zip
+```
+
+| Artifact | Path |
+|----------|------|
+| Store listing copy | `md/release/store-listing.md` |
+| Privacy policy | `md/privacy/privacy-policy.md` |
+| CWS checklist | `md/checklists/cws-submission-checklist.md` |
+| Release notes | `md/release/RELEASE_NOTES-v1.0.0.md` |
 
 ## Required reads before coding
 
@@ -32,4 +40,3 @@ When completing work, update the active `md/status/phase-X.md` using the protoco
 
 - **P0** = mandatory for v1.0 release
 - **P1** = must be explicitly **Ship** or **Defer** in scope freeze (do not assume)
-- No work outside the active phase in the master tracker

@@ -30,6 +30,7 @@ function sendToken(
     token?: string;
     done?: boolean;
     error?: string;
+    retryAfterMs?: number;
   },
 ): void {
   if (!isActiveQuery(tabId, msg.queryId)) return;

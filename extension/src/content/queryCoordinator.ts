@@ -1,16 +1,22 @@
+import { ERROR_CODE } from '../shared/errors';
 import { buildQueryPayload } from '../shared/queryBuilder';
-import { storage } from '../shared/storage';
 import { getSessionId } from '../shared/session';
 import { MESSAGE } from '../shared/types';
-import type { QueryMode } from '../shared/types';
+import type { QueryMode, QueryPayload } from '../shared/types';
 import { extractContext } from './extractor';
 import { DEEPLENS_TRIGGER_EVENT } from './intent';
 import type { TriggerPayload } from './detector';
+import {
+  getCachedResponse,
+  setCachedResponse,
+} from './responseCache';
+import { getCachedSettings } from './settingsCache';
 import { getSessionMode, setSessionMode } from './sessionMode';
-import { prepareStream } from './streamer';
-import { DEEPLENS_MODE_CHANGE, tooltipState } from './tooltip';
+import { applyCachedResponse, prepareStream } from './streamer';
+import { DEEPLENS_MODE_CHANGE, showTooltipError, tooltipState } from './tooltip';
 
 let lastTrigger: TriggerPayload | null = null;
+let lastPayload: QueryPayload | null = null;
 
 export function initQueryCoordinator(): void {
   document.addEventListener(DEEPLENS_TRIGGER_EVENT, (event) => {
@@ -26,13 +32,34 @@ export function initQueryCoordinator(): void {
   });
 }
 
+function resolveMode(): QueryMode {
+  const settings = getCachedSettings();
+  const session = getSessionMode();
+  if (session) return session;
+  return settings.defaultMode === 'links' ? 'deep' : settings.defaultMode;
+}
+
+
 async function dispatchQuery(
   trigger: TriggerPayload,
   mode: QueryMode,
+  options?: { skipCache?: boolean },
 ): Promise<void> {
   const context = extractContext(trigger);
   tooltipState.extractedContext = context;
   tooltipState.triggerMode = trigger.mode;
+
+  if (!options?.skipCache) {
+    const cached = getCachedResponse(
+      trigger.text,
+      mode,
+      context.pageDomain,
+    );
+    if (cached) {
+      applyCachedResponse(trigger, mode, cached.streamBuffer);
+      return;
+    }
+  }
 
   const queryId = crypto.randomUUID();
   prepareStream(queryId, trigger.rect, trigger.text, mode);
@@ -44,35 +71,43 @@ async function dispatchQuery(
     getSessionId(),
     queryId,
   );
+  lastPayload = payload;
 
   try {
     await chrome.runtime.sendMessage({
       type: MESSAGE.QUERY,
       payload,
     });
-  } catch (err) {
-    if (import.meta.env.DEV) {
-      console.debug('[DeepLens] query dispatch failed', err);
-    }
+  } catch {
+    showTooltipError(ERROR_CODE.CONNECTION_LOST);
   }
 }
 
-function resolveMode(
-  settings: Awaited<ReturnType<typeof storage.getPublicSettings>>,
-): QueryMode {
-  const session = getSessionMode();
-  if (session) return session;
-  return settings.defaultMode === 'links' ? 'deep' : settings.defaultMode;
-}
-
 async function handleTrigger(trigger: TriggerPayload): Promise<void> {
-  const settings = await storage.getPublicSettings();
-  await dispatchQuery(trigger, resolveMode(settings));
+  await dispatchQuery(trigger, resolveMode());
 }
 
 async function handleModeChange(mode: QueryMode): Promise<void> {
   if (!lastTrigger) return;
   setSessionMode(mode);
   chrome.runtime.sendMessage({ type: MESSAGE.ABORT }).catch(() => undefined);
-  await dispatchQuery(lastTrigger, mode);
+  await dispatchQuery(lastTrigger, mode, { skipCache: true });
+}
+
+/** Re-send last query (TRD §10.2 / §10.3 recovery) */
+export function retryLastQuery(): void {
+  if (!lastTrigger || !lastPayload) return;
+  const mode = lastPayload.mode;
+  chrome.runtime.sendMessage({ type: MESSAGE.ABORT }).catch(() => undefined);
+  void dispatchQuery(lastTrigger, mode, { skipCache: true });
+}
+
+export function rememberCompletedResponse(
+  word: string,
+  mode: QueryMode,
+  pageDomain: string,
+  streamBuffer: string,
+): void {
+  if (!streamBuffer.trim()) return;
+  setCachedResponse(word, mode, pageDomain, streamBuffer);
 }

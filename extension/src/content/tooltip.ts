@@ -5,16 +5,42 @@ import {
   TOOLTIP_WIDTH,
   TOOLTIP_WIDTH_PINNED,
 } from '../shared/position';
+import {
+  API_OVERLOADED_RETRY_MS,
+  ERROR_CODE,
+  type ErrorCode,
+} from '../shared/errors';
+import { MESSAGE } from '../shared/types';
 import type {
   DeepLensTheme,
   ExtractedContext,
   QueryMode,
   TriggerMode,
 } from '../shared/types';
+import { retryLastQuery } from './queryCoordinator';
+import { cancelScheduledRender } from './renderScheduler';
+import { clearResponseCache } from './responseCache';
 import { setSessionMode } from './sessionMode';
 import { safeRenderMarkdown } from './sanitize';
 import { shadowDOMManager } from './shadowDOM';
 import { detectPageTheme } from './theme';
+
+const SESSION_RATE_LIMIT_COUNTDOWN_MS = 3 * 60 * 1000;
+const DEFAULT_RATE_LIMIT_COUNTDOWN_MS = 60 * 1000;
+
+let countdownTimer: ReturnType<typeof setInterval> | null = null;
+let autoRetryTimer: ReturnType<typeof setTimeout> | null = null;
+
+function clearErrorTimers(): void {
+  if (countdownTimer !== null) {
+    clearInterval(countdownTimer);
+    countdownTimer = null;
+  }
+  if (autoRetryTimer !== null) {
+    clearTimeout(autoRetryTimer);
+    autoRetryTimer = null;
+  }
+}
 
 export const DEEPLENS_MODE_CHANGE = 'deeplens:mode-change';
 
@@ -275,13 +301,14 @@ export function setDoneState(): void {
   streamEl.innerHTML = safeRenderMarkdown(tooltipState.streamBuffer);
 }
 
-export function showTooltipError(code: string): void {
+export function showTooltipError(code: string, retryAfterMs?: number): void {
   if (!tooltipEl) return;
-  if (code === 'ABORTED') {
+  if (code === ERROR_CODE.ABORTED) {
     destroyTooltip(true);
     return;
   }
 
+  clearErrorTimers();
   setStatusAttr('error');
   tooltipState.error = code;
   showBodyPanel('error');
@@ -293,10 +320,42 @@ export function showTooltipError(code: string): void {
     ${actionLabel ? `<button type="button" class="dl-error-action">${actionLabel}</button>` : ''}
   `;
   if (actionLabel && action) {
-    panel.querySelector('.dl-error-action')?.addEventListener('click', action);
+    panel.querySelector('.dl-error-action')?.addEventListener('click', () => {
+      clearErrorTimers();
+      action();
+    });
   }
+
+  if (code === ERROR_CODE.RATE_LIMIT) {
+    startRateLimitCountdown(
+      panel,
+      retryAfterMs ?? DEFAULT_RATE_LIMIT_COUNTDOWN_MS,
+    );
+  } else if (code === ERROR_CODE.SESSION_RATE_LIMIT) {
+    startRateLimitCountdown(panel, SESSION_RATE_LIMIT_COUNTDOWN_MS);
+  } else if (code === ERROR_CODE.API_OVERLOADED) {
+    autoRetryTimer = setTimeout(() => retryLastQuery(), API_OVERLOADED_RETRY_MS);
+  }
+
   setFooter(code);
   applyPosition();
+}
+
+function startRateLimitCountdown(panel: HTMLElement, ms: number): void {
+  const msgEl = panel.querySelector('.dl-error-msg');
+  if (!msgEl) return;
+  let remaining = ms;
+  const tick = (): void => {
+    const sec = Math.max(1, Math.ceil(remaining / 1000));
+    msgEl.textContent = `Too many requests. Try again in ${sec}s.`;
+    remaining -= 1000;
+    if (remaining <= 0) {
+      clearErrorTimers();
+      msgEl.textContent = 'You can try again now.';
+    }
+  };
+  tick();
+  countdownTimer = setInterval(tick, 1000);
 }
 
 function errorContent(code: string): {
@@ -304,50 +363,61 @@ function errorContent(code: string): {
   actionLabel: string | null;
   action: (() => void) | null;
 } {
-  switch (code) {
-    case 'NO_API_KEY':
-    case 'INVALID_KEY':
+  const c = code as ErrorCode;
+  switch (c) {
+    case ERROR_CODE.NO_API_KEY:
+    case ERROR_CODE.INVALID_KEY:
       return {
         message: 'Invalid or missing API key.',
         actionLabel: 'Open settings',
         action: openSettings,
       };
-    case 'RATE_LIMIT':
-    case 'SESSION_RATE_LIMIT':
+    case ERROR_CODE.RATE_LIMIT:
+    case ERROR_CODE.SESSION_RATE_LIMIT:
       return {
-        message: 'Too many requests. Try again in a few minutes.',
+        message: 'Too many requests. Please wait.',
         actionLabel: null,
         action: null,
       };
-    case 'API_OVERLOADED':
+    case ERROR_CODE.API_OVERLOADED:
       return {
-        message: 'AI is busy right now.',
-        actionLabel: 'Retry',
-        action: () =>
-          document.dispatchEvent(
-            new CustomEvent(DEEPLENS_MODE_CHANGE, {
-              detail: { mode: tooltipState.currentMode },
-            }),
-          ),
+        message: 'AI is busy right now. Retrying shortly…',
+        actionLabel: 'Retry now',
+        action: retryLastQuery,
       };
-    case 'NETWORK_ERROR':
+    case ERROR_CODE.NETWORK_ERROR:
       return {
         message: 'No connection. Check your internet.',
-        actionLabel: null,
-        action: null,
+        actionLabel: 'Retry',
+        action: retryLastQuery,
       };
+    case ERROR_CODE.CONNECTION_LOST:
+      return {
+        message: 'Connection lost. Tap to retry.',
+        actionLabel: 'Retry',
+        action: retryLastQuery,
+      };
+    case ERROR_CODE.BAD_REQUEST:
+    case ERROR_CODE.API_ERROR:
+      return {
+        message: 'Something went wrong. Please try again.',
+        actionLabel: 'Retry',
+        action: retryLastQuery,
+      };
+    case ERROR_CODE.ABORTED:
+      return { message: '', actionLabel: null, action: null };
     default:
       return {
         message: 'Something went wrong. Please try again.',
-        actionLabel: null,
-        action: null,
+        actionLabel: 'Retry',
+        action: retryLastQuery,
       };
   }
 }
 
 function openSettings(): void {
   chrome.runtime
-    .sendMessage({ type: 'DEEPLENS_OPEN_SETTINGS' })
+    .sendMessage({ type: MESSAGE.OPEN_SETTINGS })
     .catch(() => undefined);
 }
 
@@ -361,6 +431,9 @@ export function togglePin(): void {
 
 export function destroyTooltip(silent = false): void {
   clearFadeTimer();
+  clearErrorTimers();
+  cancelScheduledRender();
+  clearResponseCache();
   if (!silent && tooltipState.status === 'loading') {
     /* silent abort during loading — no error UI */
   }
