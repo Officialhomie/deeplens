@@ -3,6 +3,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import {
+  extractWordAtOffset,
   filterLookupWord,
   getWordAtPoint,
   isExcluded,
@@ -37,6 +38,22 @@ describe('isExcluded', () => {
     expect(isExcluded(document.getElementById('b'))).toBe(true);
     expect(isExcluded(document.getElementById('role'))).toBe(true);
     expect(isExcluded(document.getElementById('ok'))).toBe(false);
+  });
+});
+
+describe('extractWordAtOffset', () => {
+  it('extracts a word at caret offset', () => {
+    const text = 'The eigenvalue problem appears often.';
+    const idx = text.indexOf('eigenvalue');
+    expect(extractWordAtOffset(text, idx + 3)).toBe('eigenvalue');
+  });
+
+  it('returns null for numeric-only spans', () => {
+    expect(extractWordAtOffset('12345', 2)).toBeNull();
+  });
+
+  it('handles text inside strong tags (same text node)', () => {
+    expect(extractWordAtOffset('eigenvalue', 4)).toBe('eigenvalue');
   });
 });
 

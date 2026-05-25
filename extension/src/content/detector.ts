@@ -75,17 +75,29 @@ function caretRangeFromPoint(x: number, y: number): Range | null {
   return range;
 }
 
+/** Expand word boundaries in a text node (Range.expand('word') is unreliable in Chrome). */
+export function extractWordAtOffset(text: string, offset: number): string | null {
+  if (text.length === 0) return null;
+  const safeOffset = Math.min(Math.max(0, offset), text.length - 1);
+
+  let start = safeOffset;
+  while (start > 0 && /\w/.test(text[start - 1])) start--;
+
+  let end = safeOffset;
+  while (end < text.length && /\w/.test(text[end])) end++;
+
+  if (start >= end) return null;
+  return filterLookupWord(text.slice(start, end));
+}
+
 export function getWordAtPoint(x: number, y: number): string | null {
   const range = caretRangeFromPoint(x, y);
   if (!range) return null;
-  try {
-    const expandable = range as Range & { expand?: (unit: string) => void };
-    if (typeof expandable.expand !== 'function') return null;
-    expandable.expand('word');
-  } catch {
-    return null;
-  }
-  return filterLookupWord(range.toString());
+
+  const node = range.startContainer;
+  if (node.nodeType !== Node.TEXT_NODE) return null;
+
+  return extractWordAtOffset(node.textContent ?? '', range.startOffset);
 }
 
 function isDomainBlocked(hostname: string, list: string[]): boolean {
@@ -132,15 +144,25 @@ export function initDetector(options: DetectorOptions): () => void {
     options.onTrigger(payload);
   };
 
+  const cancelHoverIntent = (): void => {
+    clearHoverTimer();
+    hoverWord = null;
+    activeHoverTarget = null;
+    abortIfPending();
+  };
+
   const onMouseOver = (e: MouseEvent): void => {
     void options.getConfig().then((config) => {
       if (!config.isEnabled || !config.hoverEnabled) return;
       if (isDomainBlocked(location.hostname, config.blacklistedDomains)) return;
-      if (isExcluded(e.target)) return;
+      if (isExcluded(e.target)) {
+        cancelHoverIntent();
+        return;
+      }
 
       const word = getWordAtPoint(e.clientX, e.clientY);
       if (!word) {
-        clearHoverTimer();
+        cancelHoverIntent();
         return;
       }
 
@@ -169,20 +191,52 @@ export function initDetector(options: DetectorOptions): () => void {
   };
 
   const onMouseMove = (e: MouseEvent): void => {
-    if (hoverTimer === null) return;
-    if (distance(anchorX, anchorY, e.clientX, e.clientY) > MOVE_THRESHOLD_PX) {
-      clearHoverTimer();
-      hoverWord = null;
-      activeHoverTarget = null;
-      abortIfPending();
+    if (distance(anchorX, anchorY, e.clientX, e.clientY) <= MOVE_THRESHOLD_PX) return;
+
+    const word = getWordAtPoint(e.clientX, e.clientY);
+    const newTarget = e.target instanceof Element ? e.target : null;
+
+    if (!word) {
+      cancelHoverIntent();
+      anchorX = e.clientX;
+      anchorY = e.clientY;
+      return;
     }
+
+    anchorX = e.clientX;
+    anchorY = e.clientY;
+
+    if (word === hoverWord && newTarget === activeHoverTarget) {
+      // Still over the same word — keep the running timer
+      return;
+    }
+
+    // Cursor moved to a different word — restart the timer
+    clearHoverTimer();
+    abortIfPending();
+    hoverWord = word;
+    activeHoverTarget = newTarget;
+
+    void options.getConfig().then((config) => {
+      if (!config.isEnabled || !config.hoverEnabled) return;
+      if (isDomainBlocked(location.hostname, config.blacklistedDomains)) return;
+      if (hoverWord !== word) return; // word changed before config resolved
+
+      hoverTimer = setTimeout(() => {
+        hoverTimer = null;
+        const rect = new DOMRect(anchorX, anchorY, 1, 1);
+        fireTrigger({ text: word, mode: 'hover', rect });
+      }, config.hoverDelayMs);
+    });
   };
 
-  const onMouseOut = (): void => {
-    clearHoverTimer();
-    hoverWord = null;
-    activeHoverTarget = null;
-    abortIfPending();
+  const onMouseOut = (e: MouseEvent): void => {
+    const related = e.relatedTarget;
+    // Ignore bubbled mouseout when still inside the page (e.g. p → strong).
+    if (related instanceof Node && document.documentElement.contains(related)) {
+      return;
+    }
+    cancelHoverIntent();
   };
 
   const onMouseUp = (): void => {
