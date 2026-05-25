@@ -123,6 +123,7 @@ export function initDetector(options: DetectorOptions): () => void {
   let anchorY = 0;
   let hoverWord: string | null = null;
   let activeHoverTarget: Element | null = null;
+  let isMouseDown = false;
 
   const clearHoverTimer = (): void => {
     if (hoverTimer !== null) {
@@ -190,28 +191,37 @@ export function initDetector(options: DetectorOptions): () => void {
     });
   };
 
+  const onMouseDown = (): void => {
+    isMouseDown = true;
+    clearHoverTimer();
+  };
+
   const onMouseMove = (e: MouseEvent): void => {
+    // Never start hover timers while the user is clicking or dragging to select.
+    if (isMouseDown) return;
+
     if (distance(anchorX, anchorY, e.clientX, e.clientY) <= MOVE_THRESHOLD_PX) return;
 
     const word = getWordAtPoint(e.clientX, e.clientY);
     const newTarget = e.target instanceof Element ? e.target : null;
 
-    if (!word) {
-      cancelHoverIntent();
-      anchorX = e.clientX;
-      anchorY = e.clientY;
-      return;
-    }
-
     anchorX = e.clientX;
     anchorY = e.clientY;
 
-    if (word === hoverWord && newTarget === activeHoverTarget) {
-      // Still over the same word — keep the running timer
+    if (!word) {
+      // Transient null — caret landed on an element boundary or whitespace.
+      // Cancel any pending timer but keep hoverWord so we don't re-trigger
+      // the same word if the caret flips back to the text node next event.
+      clearHoverTimer();
       return;
     }
 
-    // Cursor moved to a different word — restart the timer
+    if (word === hoverWord && newTarget === activeHoverTarget) {
+      // Same word — timer may be running or may have already fired; either way leave it.
+      return;
+    }
+
+    // Genuinely different word — restart the timer.
     clearHoverTimer();
     abortIfPending();
     hoverWord = word;
@@ -220,7 +230,7 @@ export function initDetector(options: DetectorOptions): () => void {
     void options.getConfig().then((config) => {
       if (!config.isEnabled || !config.hoverEnabled) return;
       if (isDomainBlocked(location.hostname, config.blacklistedDomains)) return;
-      if (hoverWord !== word) return; // word changed before config resolved
+      if (hoverWord !== word) return;
 
       hoverTimer = setTimeout(() => {
         hoverTimer = null;
@@ -240,6 +250,7 @@ export function initDetector(options: DetectorOptions): () => void {
   };
 
   const onMouseUp = (): void => {
+    isMouseDown = false;
     void options.getConfig().then((config) => {
       if (!config.isEnabled || !config.selectionEnabled) return;
       if (isDomainBlocked(location.hostname, config.blacklistedDomains)) return;
@@ -262,22 +273,15 @@ export function initDetector(options: DetectorOptions): () => void {
     });
   };
 
-  document.addEventListener('mouseover', onMouseOver, {
-    capture: true,
-    passive: true,
-  });
-  document.addEventListener('mousemove', onMouseMove, {
-    capture: true,
-    passive: true,
-  });
-  document.addEventListener('mouseout', onMouseOut, {
-    capture: true,
-    passive: true,
-  });
+  document.addEventListener('mousedown', onMouseDown, { capture: true, passive: true });
+  document.addEventListener('mouseover', onMouseOver, { capture: true, passive: true });
+  document.addEventListener('mousemove', onMouseMove, { capture: true, passive: true });
+  document.addEventListener('mouseout', onMouseOut, { capture: true, passive: true });
   window.addEventListener('mouseup', onMouseUp);
 
   return () => {
     clearHoverTimer();
+    document.removeEventListener('mousedown', onMouseDown, true);
     document.removeEventListener('mouseover', onMouseOver, true);
     document.removeEventListener('mousemove', onMouseMove, true);
     document.removeEventListener('mouseout', onMouseOut, true);
