@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DeepLens — extension test page</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 42rem;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        line-height: 1.65;
+        color: #1a1a24;
+      }
+      .note {
+        background: #f0f4ff;
+        border: 1px solid #5b5dff44;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+      }
+      .note strong {
+        color: #5b5dff;
+      }
+      #word-target {
+        font-size: 1.15rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>DeepLens test page</h1>
+    <p class="note">
+      <strong>Load the Chrome extension</strong> from
+      <code>extension/dist</code> (not this HTML alone). Reload this tab after
+      installing. Hover ~300ms on <strong>eigenvalue</strong> below, or select
+      “quantum entanglement”.
+    </p>
+    <p id="word-target">
+      The <strong>eigenvalue</strong> decomposition appears throughout linear
+      algebra and machine learning textbooks.
+    </p>
+    <p id="select-target">
+      Select this phrase: quantum entanglement explains correlated measurement
+      outcomes.
+    </p>
+  </body>
+</html>
