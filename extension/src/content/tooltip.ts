@@ -223,8 +223,20 @@ function wireTooltipControls(el: HTMLElement): void {
   });
 }
 
-function setFooter(text: string): void {
+export function setFooter(text: string): void {
   if (statusEl) statusEl.textContent = text;
+}
+
+/** Soft abort: keep panel open, show loading for the next query. */
+export function resetTooltipForNewQuery(): void {
+  if (!tooltipEl || !tooltipState.isVisible) return;
+  clearErrorTimers();
+  tooltipState.streamBuffer = '';
+  tooltipState.error = null;
+  setStatusAttr('loading');
+  showBodyPanel('skeleton');
+  setFooter('Thinking…');
+  if (streamEl) streamEl.innerHTML = '';
 }
 
 function setStatusAttr(status: TooltipSessionState['status']): void {
@@ -240,6 +252,7 @@ function showBodyPanel(panel: 'skeleton' | 'stream' | 'error'): void {
   skeleton.hidden = panel !== 'skeleton';
   stream.hidden = panel !== 'stream';
   error.hidden = panel !== 'error';
+  tooltipEl.dataset.panel = panel;
 }
 
 export function showTooltip(
@@ -277,6 +290,7 @@ export function showTooltip(
 
   tooltipEl.classList.remove('is-pinned');
   tooltipEl.dataset.theme = tooltipState.theme;
+  tooltipEl.dataset.trigger = tooltipState.triggerMode ?? 'hover';
   setStatusAttr('loading');
   showBodyPanel('skeleton');
   setFooter('Thinking…');
@@ -295,6 +309,7 @@ export function setStreamingContent(html: string, showCursor: boolean): void {
 
 export function setDoneState(): void {
   if (!streamEl) return;
+  showBodyPanel('stream');
   setStatusAttr('done');
   setFooter('Done');
   streamEl.innerHTML = safeRenderMarkdown(tooltipState.streamBuffer);
@@ -329,9 +344,10 @@ export function showTooltipError(code: string, retryAfterMs?: number): void {
     startRateLimitCountdown(
       panel,
       retryAfterMs ?? DEFAULT_RATE_LIMIT_COUNTDOWN_MS,
+      true,
     );
   } else if (code === ERROR_CODE.SESSION_RATE_LIMIT) {
-    startRateLimitCountdown(panel, SESSION_RATE_LIMIT_COUNTDOWN_MS);
+    startRateLimitCountdown(panel, SESSION_RATE_LIMIT_COUNTDOWN_MS, false);
   } else if (code === ERROR_CODE.API_OVERLOADED) {
     autoRetryTimer = setTimeout(() => retryLastQuery(), API_OVERLOADED_RETRY_MS);
   }
@@ -340,7 +356,7 @@ export function showTooltipError(code: string, retryAfterMs?: number): void {
   applyPosition();
 }
 
-function startRateLimitCountdown(panel: HTMLElement, ms: number): void {
+function startRateLimitCountdown(panel: HTMLElement, ms: number, autoRetry: boolean): void {
   const msgEl = panel.querySelector('.dl-error-msg');
   if (!msgEl) return;
   let remaining = ms;
@@ -350,7 +366,12 @@ function startRateLimitCountdown(panel: HTMLElement, ms: number): void {
     remaining -= 1000;
     if (remaining <= 0) {
       clearErrorTimers();
-      msgEl.textContent = 'You can try again now.';
+      if (autoRetry) {
+        msgEl.textContent = 'Retrying…';
+        autoRetryTimer = setTimeout(() => retryLastQuery(), 500);
+      } else {
+        msgEl.textContent = 'You can try again now.';
+      }
     }
   };
   tick();
@@ -397,6 +418,12 @@ function errorContent(code: string): {
         action: retryLastQuery,
       };
     case ERROR_CODE.BAD_REQUEST:
+      return {
+        message:
+          'OpenRouter rejected this request (model unavailable or invalid). Retry after reloading the extension.',
+        actionLabel: 'Retry',
+        action: retryLastQuery,
+      };
     case ERROR_CODE.API_ERROR:
       return {
         message: 'Something went wrong. Please try again.',
