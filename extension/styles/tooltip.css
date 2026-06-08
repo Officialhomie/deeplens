@@ -1,6 +1,7 @@
 /* DeepLens tooltip — Shadow DOM (design brief §3.2–3.3) */
 
 .dl-tooltip {
+  pointer-events: auto;
   --dl-bg: #ffffff;
   --dl-text: #111111;
   --dl-text-muted: #555555;
@@ -67,6 +68,10 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.dl-tooltip[data-trigger='select'] .dl-word {
+  max-width: 200px;
 }
 
 .dl-modes {
@@ -179,6 +184,12 @@
   50% {
     opacity: 0;
   }
+}
+
+.dl-skeleton[hidden],
+.dl-stream[hidden],
+.dl-error-panel[hidden] {
+  display: none !important;
 }
 
 .dl-skeleton {

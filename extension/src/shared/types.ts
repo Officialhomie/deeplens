@@ -8,6 +8,7 @@ export const MESSAGE = {
 
 export type QueryMode = 'quick' | 'deep' | 'links';
 export type TriggerMode = 'hover' | 'select';
+export type LLMProvider = 'anthropic' | 'gemini' | 'groq' | 'openrouter';
 export type DomainCategory =
   | 'technical'
   | 'academic'

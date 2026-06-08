@@ -1,4 +1,6 @@
 import { streamClaudeResponse } from './claudeAPI';
+import { streamGeminiResponse } from './geminiAPI';
+import { streamOpenAICompatResponse } from './openaiCompatAPI';
 import { checkSessionRateLimit } from './rateLimiter';
 import { getApiKey } from './storageSecure';
 import {
@@ -9,6 +11,7 @@ import {
 import { isTrustedExtensionSender, isTrustedTabSender } from './trust';
 import { ERROR_CODE } from '../shared/errors';
 import { safeDebug } from '../shared/safeLog';
+import { storage } from '../shared/storage';
 import {
   assertPayloadHasNoSecrets,
   validateQueryPayload,
@@ -68,11 +71,23 @@ async function handleQuery(payload: QueryPayload, tabId: number): Promise<void> 
     return;
   }
 
+  const provider = await storage.get('provider');
   const isStale = () => !isActiveQuery(tabId, payload.queryId);
+  const relay = (msg: Parameters<typeof sendToken>[1]) => sendToken(tabId, msg);
 
-  await streamClaudeResponse(apiKey, payload, signal, (msg) => {
-    sendToken(tabId, msg);
-  }, isStale);
+  switch (provider) {
+    case 'gemini':
+      await streamGeminiResponse(apiKey, payload, signal, relay, isStale);
+      break;
+    case 'groq':
+    case 'openrouter':
+      await streamOpenAICompatResponse(apiKey, provider, payload, signal, relay, isStale);
+      break;
+    case 'anthropic':
+    default:
+      await streamClaudeResponse(apiKey, payload, signal, relay, isStale);
+      break;
+  }
 }
 
 export function registerMessageRouter(): void {
@@ -123,7 +138,7 @@ export function registerMessageRouter(): void {
       message !== null &&
       (message as { type: string }).type === MESSAGE.OPEN_SETTINGS
     ) {
-      void chrome.action.openPopup();
+      void chrome.tabs.create({ url: chrome.runtime.getURL('src/popup/popup.html') });
       sendResponse({ ok: true });
       return true;
     }

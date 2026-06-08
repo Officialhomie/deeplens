@@ -1,7 +1,8 @@
-import type { QueryMode } from './types';
+import type { LLMProvider, QueryMode } from './types';
 
 export interface DeepLensStorage {
   apiKey: string;
+  provider: LLMProvider;
   defaultMode: QueryMode;
   hoverDelayMs: number;
   hoverEnabled: boolean;
@@ -17,6 +18,7 @@ export type PublicSettings = Omit<DeepLensStorage, 'apiKey'>;
 
 const DEFAULTS: DeepLensStorage = {
   apiKey: '',
+  provider: 'anthropic',
   defaultMode: 'deep',
   hoverDelayMs: 300,
   hoverEnabled: true,

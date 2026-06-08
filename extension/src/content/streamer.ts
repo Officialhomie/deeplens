@@ -10,7 +10,9 @@ import { safeRenderMarkdown } from './sanitize';
 import { appendToBuffer } from './streamRenderer';
 import {
   destroyTooltip,
+  resetTooltipForNewQuery,
   setDoneState,
+  setFooter,
   setStreamingContent,
   showTooltip,
   showTooltipError,
@@ -53,6 +55,7 @@ export function applyCachedResponse(
   const queryId = crypto.randomUUID();
   prepareStream(queryId, trigger.rect, trigger.text, mode);
   tooltipState.streamBuffer = streamBuffer;
+  flushStreamToDom(false);
   setDoneState();
   const ctx = tooltipState.extractedContext;
   if (ctx) {
@@ -72,7 +75,16 @@ export function prepareStream(
   clearStreamWatchdog();
   cancelScheduledRender();
   showTooltip(word, triggerRect, mode);
+  setFooter('Thinking…');
   resetStreamWatchdog();
+}
+
+/** Keep tooltip open; cancel in-flight stream (new query or soft abort). */
+export function softAbortStream(): void {
+  activeQueryId = null;
+  clearStreamWatchdog();
+  cancelScheduledRender();
+  resetTooltipForNewQuery();
 }
 
 export function resetStream(): void {
@@ -90,6 +102,15 @@ function isStaleMessage(msg: TokenMessage): boolean {
 function completeStream(): void {
   clearStreamWatchdog();
   cancelScheduledRender();
+
+  const bufferLen = tooltipState.streamBuffer.trim().length;
+
+  if (bufferLen === 0) {
+    showTooltipError(ERROR_CODE.API_ERROR);
+    activeQueryId = null;
+    return;
+  }
+
   flushStreamToDom(false);
   setDoneState();
 
@@ -119,11 +140,16 @@ function handleTokenMessage(msg: TokenMessage): void {
   if (msg.token) {
     resetStreamWatchdog();
     notifyStreamStarted();
+    const isFirstToken = tooltipState.streamBuffer.length === 0;
     tooltipState.streamBuffer = appendToBuffer(
       tooltipState.streamBuffer,
       msg.token,
     );
-    scheduleRender(() => flushStreamToDom(true));
+    if (isFirstToken) {
+      flushStreamToDom(true);
+    } else {
+      scheduleRender(() => flushStreamToDom(true));
+    }
   }
 
   if (msg.done) {
@@ -132,6 +158,10 @@ function handleTokenMessage(msg: TokenMessage): void {
 }
 
 export function initStreamer(): void {
+  document.addEventListener('deeplens:soft-abort', () => {
+    softAbortStream();
+  });
+
   chrome.runtime.onMessage.addListener((message, sender) => {
     if (sender.id !== chrome.runtime.id) return;
     if (!isTokenMessage(message)) return;

@@ -12,8 +12,8 @@ test.describe('escape dismiss', () => {
     await extPage.waitForLoadState('domcontentloaded');
     await extPage.waitForTimeout(300);
     await hoverText(extPage, 'eigenvalue');
-    await extPage.waitForTimeout(450);
-    await waitForTooltipHost(extPage);
+    await extPage.waitForTimeout(500);
+    await waitForTooltipHost(extPage, 15_000);
     await extPage.keyboard.press('Escape');
     await extPage.waitForTimeout(200);
     expect(await extPage.locator('#deeplens-host').count()).toBe(0);

@@ -1,7 +1,9 @@
 import { storage } from '../shared/storage';
-import type { QueryMode } from '../shared/types';
+import type { LLMProvider, QueryMode } from '../shared/types';
 import {
   clampHoverDelay,
+  PROVIDER_KEY_HINTS,
+  PROVIDER_KEY_PLACEHOLDERS,
   validateApiKeyFormat,
 } from './settingsUtils';
 
@@ -12,11 +14,15 @@ const viewSettings = document.getElementById('view-settings')!;
 const enabledInput = document.getElementById('enabled') as HTMLInputElement;
 const activeLabel = document.getElementById('active-label')!;
 
+const providerSelect = document.getElementById('provider') as HTMLSelectElement;
+const providerFirstSelect = document.getElementById('provider-first') as HTMLSelectElement;
+
 const apiKeyInput = document.getElementById('api-key') as HTMLInputElement;
 const apiKeyFirstInput = document.getElementById('api-key-first') as HTMLInputElement;
 const keyError = document.getElementById('key-error') as HTMLParagraphElement;
 const keyErrorFirst = document.getElementById('key-error-first') as HTMLParagraphElement;
 const keyHint = document.getElementById('key-hint')!;
+const keyHintFirst = document.getElementById('key-hint-first')!;
 
 const hoverDelayInput = document.getElementById('hover-delay') as HTMLInputElement;
 const hoverDelayValue = document.getElementById('hover-delay-value') as HTMLOutputElement;
@@ -61,27 +67,19 @@ function setSegmentedMode(mode: QueryMode): void {
   });
 }
 
-async function saveApiKey(value: string): Promise<boolean> {
-  const trimmed = value.trim();
-  if (!trimmed) {
-    setKeyError(keyError, 'API key is required.');
-    return false;
-  }
-  if (!validateApiKeyFormat(trimmed)) {
-    setKeyError(keyError, 'Key should start with sk-ant and be at least 20 characters.');
-    setKeyError(keyErrorFirst, 'Invalid key format.');
-    return false;
-  }
-  await storage.set('apiKey', trimmed);
-  setKeyError(keyError, null);
-  setKeyError(keyErrorFirst, null);
-  keyHint.textContent = 'Key saved locally ✓';
-  return true;
+function applyProviderUI(provider: LLMProvider, input: HTMLInputElement, hint: HTMLElement): void {
+  input.placeholder = PROVIDER_KEY_PLACEHOLDERS[provider];
+  hint.textContent = PROVIDER_KEY_HINTS[provider];
 }
 
 async function loadSettings(): Promise<void> {
   const settings = await storage.getAll();
   const hasKey = Boolean(settings.apiKey.trim());
+
+  providerSelect.value = settings.provider;
+  providerFirstSelect.value = settings.provider;
+  applyProviderUI(settings.provider, apiKeyInput, keyHint);
+  applyProviderUI(settings.provider, apiKeyFirstInput, keyHintFirst);
 
   apiKeyInput.value = settings.apiKey;
   apiKeyFirstInput.value = settings.apiKey;
@@ -106,11 +104,36 @@ async function loadSettings(): Promise<void> {
 }
 
 function bindSettingsView(): void {
+  providerSelect.addEventListener('change', async () => {
+    const provider = providerSelect.value as LLMProvider;
+    await storage.set('provider', provider);
+    applyProviderUI(provider, apiKeyInput, keyHint);
+    setKeyError(keyError, null);
+    apiKeyInput.value = '';
+    await storage.set('apiKey', '');
+    setStatus('Provider changed — re-enter your API key.', false);
+    updateActiveHeader(false, false);
+  });
+
   apiKeyInput.addEventListener('change', async () => {
-    const ok = await saveApiKey(apiKeyInput.value);
-    setStatus(ok ? 'API key saved.' : 'Fix API key format.', ok);
-    const hasKey = Boolean(apiKeyInput.value.trim());
-    updateActiveHeader(enabledInput.checked, hasKey);
+    const provider = providerSelect.value as LLMProvider;
+    const trimmed = apiKeyInput.value.trim();
+    if (!trimmed) {
+      setKeyError(keyError, 'API key is required.');
+      setStatus('Fix API key format.');
+      return;
+    }
+    if (!validateApiKeyFormat(trimmed, provider)) {
+      const prefix = PROVIDER_KEY_PLACEHOLDERS[provider].replace('…', '');
+      setKeyError(keyError, `Key should start with ${prefix} (at least 20 chars).`);
+      setStatus('Fix API key format.');
+      return;
+    }
+    await storage.set('apiKey', trimmed);
+    setKeyError(keyError, null);
+    keyHint.textContent = 'Key saved locally';
+    setStatus('API key saved.', true);
+    updateActiveHeader(enabledInput.checked, true);
   });
 
   enabledInput.addEventListener('change', async () => {
@@ -157,13 +180,25 @@ function bindSettingsView(): void {
 }
 
 function bindFirstRun(): void {
+  providerFirstSelect.addEventListener('change', () => {
+    const provider = providerFirstSelect.value as LLMProvider;
+    void storage.set('provider', provider);
+    applyProviderUI(provider, apiKeyFirstInput, keyHintFirst);
+    setKeyError(keyErrorFirst, null);
+  });
+
   activateBtn.addEventListener('click', async () => {
     activateBtn.disabled = true;
-    const ok = await saveApiKey(apiKeyFirstInput.value);
-    if (!ok) {
+    const provider = providerFirstSelect.value as LLMProvider;
+    const trimmed = apiKeyFirstInput.value.trim();
+    if (!trimmed || !validateApiKeyFormat(trimmed, provider)) {
+      const prefix = PROVIDER_KEY_PLACEHOLDERS[provider].replace('…', '');
+      setKeyError(keyErrorFirst, `Key should start with ${prefix}.`);
       activateBtn.disabled = false;
       return;
     }
+    await storage.set('apiKey', trimmed);
+    await storage.set('provider', provider);
     await storage.set('isEnabled', true);
     updateActiveHeader(true, true);
     showView('onboarding');

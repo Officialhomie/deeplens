@@ -21,21 +21,26 @@
     <!-- First-run: no API key -->
     <section id="view-first-run" class="view" hidden>
       <div class="banner banner-warn">
-        Add your Anthropic API key to activate DeepLens.
+        Choose a provider and add your API key to activate DeepLens.
       </div>
+      <label class="field">
+        <span>AI provider</span>
+        <select id="provider-first">
+          <option value="anthropic">Anthropic (Claude)</option>
+          <option value="gemini">Google Gemini — free tier</option>
+          <option value="groq">Groq — free tier</option>
+          <option value="openrouter">OpenRouter</option>
+        </select>
+      </label>
       <label class="field">
         <span>API key</span>
         <input
           id="api-key-first"
           type="password"
           autocomplete="off"
-          placeholder="Paste sk-ant-api-key here"
+          placeholder="Paste your API key here"
         />
-        <small>
-          <a href="https://console.anthropic.com/" target="_blank" rel="noopener"
-            >Get a key at console.anthropic.com</a
-          >
-        </small>
+        <small id="key-hint-first">Get a free key at aistudio.google.com</small>
       </label>
       <p id="key-error-first" class="field-error" hidden></p>
       <div class="btn-row">
@@ -84,7 +89,17 @@
     <!-- Configured settings -->
     <section id="view-settings" class="view" hidden>
       <label class="field">
-        <span>Anthropic API key</span>
+        <span>AI provider</span>
+        <select id="provider">
+          <option value="anthropic">Anthropic (Claude)</option>
+          <option value="gemini">Google Gemini — free tier</option>
+          <option value="groq">Groq — free tier</option>
+          <option value="openrouter">OpenRouter</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>API key</span>
         <input
           id="api-key"
           type="password"
@@ -131,7 +146,7 @@
     </section>
 
     <footer class="popup-footer">
-      Your text is sent to Anthropic's API to generate responses.
+      Your text is processed by your chosen AI provider's API.
     </footer>
 
     <script type="module" src="./popup.ts"></script>

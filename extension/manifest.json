@@ -27,8 +27,13 @@
       "all_frames": false
     }
   ],
-  "permissions": ["storage", "activeTab", "scripting"],
-  "host_permissions": ["https://api.anthropic.com/*"],
+  "permissions": ["storage", "activeTab", "scripting", "tabs"],
+  "host_permissions": [
+    "https://api.anthropic.com/*",
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.groq.com/*",
+    "https://openrouter.ai/*"
+  ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
   },

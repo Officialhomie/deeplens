@@ -33,4 +33,9 @@ describe('responseCache', () => {
     expect(getCachedResponse('beta', 'quick', 'example.com')).toBeNull();
     expect(getCachedResponse('alpha', 'deep', 'example.com')).toBeNull();
   });
+
+  it('misses when cached stream buffer is empty', () => {
+    setCachedResponse('term', 'quick', 'example.com', '   ');
+    expect(getCachedResponse('term', 'quick', 'example.com')).toBeNull();
+  });
 });

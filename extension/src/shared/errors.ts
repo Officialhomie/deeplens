@@ -21,13 +21,15 @@ export const STREAM_IDLE_TIMEOUT_MS = 45_000;
 export type ErrorCode = (typeof ERROR_CODE)[keyof typeof ERROR_CODE];
 
 export function mapHttpError(status: number, errorType?: string): ErrorCode {
-  if (status === 401) {
-    return errorType === 'authentication_error'
+  if (status === 401 || status === 403) {
+    // Anthropic uses 'authentication_error'; other providers just use 401/403
+    return errorType === 'authentication_error' || !errorType
       ? ERROR_CODE.INVALID_KEY
       : ERROR_CODE.NO_API_KEY;
   }
+  if (status === 402) return ERROR_CODE.INVALID_KEY; // out of credits
+  if (status === 400 || status === 404 || status === 422) return ERROR_CODE.BAD_REQUEST;
   if (status === 429) return ERROR_CODE.RATE_LIMIT;
-  if (status === 529) return ERROR_CODE.API_OVERLOADED;
-  if (status === 400) return ERROR_CODE.BAD_REQUEST;
+  if (status === 503 || status === 529) return ERROR_CODE.API_OVERLOADED;
   return ERROR_CODE.API_ERROR;
 }

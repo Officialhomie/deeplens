@@ -1,6 +1,7 @@
 import { MESSAGE } from '../shared/types';
 import { initDetector, type TriggerPayload } from './detector';
 import { getCachedSettings } from './settingsCache';
+import { tooltipState } from './tooltip';
 
 export const DEEPLENS_TRIGGER_EVENT = 'deeplens:trigger';
 
@@ -10,7 +11,16 @@ declare global {
   }
 }
 
-function sendAbort(): void {
+/** Cancel in-flight query but keep tooltip (new trigger incoming). */
+function sendSoftAbort(): void {
+  document.dispatchEvent(new CustomEvent('deeplens:soft-abort'));
+  chrome.runtime.sendMessage({ type: MESSAGE.ABORT }).catch(() => {
+    /* service worker may be asleep */
+  });
+}
+
+/** Dismiss tooltip (user left before stream started). */
+function sendHardAbort(): void {
   document.dispatchEvent(new CustomEvent('deeplens:abort'));
   chrome.runtime.sendMessage({ type: MESSAGE.ABORT }).catch(() => {
     /* service worker may be asleep */
@@ -35,7 +45,10 @@ export function initIntentEngine(): () => void {
         blacklistedDomains: settings.blacklistedDomains,
       };
     },
-    onAbort: sendAbort,
+    onAbort: sendHardAbort,
+    onSoftAbort: sendSoftAbort,
     onTrigger: dispatchTrigger,
+    shouldSuppressHover: () =>
+      tooltipState.isVisible && tooltipState.triggerMode === 'select',
   });
 }

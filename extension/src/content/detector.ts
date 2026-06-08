@@ -20,6 +20,18 @@ export interface DetectorOptions {
   getConfig: () => Promise<DetectorConfig & { blacklistedDomains: string[] }>;
   onTrigger: TriggerHandler;
   onAbort: AbortHandler;
+  onSoftAbort: AbortHandler;
+  /** Block hover while a selection tooltip is active. */
+  shouldSuppressHover?: () => boolean;
+}
+
+/** Non-empty user text selection on the page. */
+export function getActiveSelectionText(): string | null {
+  const text = window.getSelection()?.toString().trim() ?? '';
+  if (text.length < MIN_SELECTION_LEN || text.length > MAX_SELECTION_LEN) {
+    return null;
+  }
+  return text;
 }
 
 const EXCLUDED_TAGS = new Set([
@@ -75,17 +87,29 @@ function caretRangeFromPoint(x: number, y: number): Range | null {
   return range;
 }
 
+/** Expand word boundaries in a text node (Range.expand('word') is unreliable in Chrome). */
+export function extractWordAtOffset(text: string, offset: number): string | null {
+  if (text.length === 0) return null;
+  const safeOffset = Math.min(Math.max(0, offset), text.length - 1);
+
+  let start = safeOffset;
+  while (start > 0 && /\w/.test(text[start - 1])) start--;
+
+  let end = safeOffset;
+  while (end < text.length && /\w/.test(text[end])) end++;
+
+  if (start >= end) return null;
+  return filterLookupWord(text.slice(start, end));
+}
+
 export function getWordAtPoint(x: number, y: number): string | null {
   const range = caretRangeFromPoint(x, y);
   if (!range) return null;
-  try {
-    const expandable = range as Range & { expand?: (unit: string) => void };
-    if (typeof expandable.expand !== 'function') return null;
-    expandable.expand('word');
-  } catch {
-    return null;
-  }
-  return filterLookupWord(range.toString());
+
+  const node = range.startContainer;
+  if (node.nodeType !== Node.TEXT_NODE) return null;
+
+  return extractWordAtOffset(node.textContent ?? '', range.startOffset);
 }
 
 function isDomainBlocked(hostname: string, list: string[]): boolean {
@@ -111,6 +135,7 @@ export function initDetector(options: DetectorOptions): () => void {
   let anchorY = 0;
   let hoverWord: string | null = null;
   let activeHoverTarget: Element | null = null;
+  let isMouseDown = false;
 
   const clearHoverTimer = (): void => {
     if (hoverTimer !== null) {
@@ -120,35 +145,45 @@ export function initDetector(options: DetectorOptions): () => void {
   };
 
   const abortIfPending = (): void => {
-    if (abortBeforeStream) {
-      options.onAbort();
-      abortBeforeStream = false;
+    if (!abortBeforeStream) return;
+    abortBeforeStream = false;
+    if (options.shouldSuppressHover?.()) {
+      options.onSoftAbort();
+      return;
     }
+    options.onAbort();
   };
 
   const fireTrigger = (payload: TriggerPayload): void => {
-    options.onAbort();
+    options.onSoftAbort();
     abortBeforeStream = true;
     options.onTrigger(payload);
+  };
+
+  const cancelHoverIntent = (): void => {
+    clearHoverTimer();
+    hoverWord = null;
+    activeHoverTarget = null;
+    abortIfPending();
   };
 
   const onMouseOver = (e: MouseEvent): void => {
     void options.getConfig().then((config) => {
       if (!config.isEnabled || !config.hoverEnabled) return;
+      if (getActiveSelectionText() || options.shouldSuppressHover?.()) return;
       if (isDomainBlocked(location.hostname, config.blacklistedDomains)) return;
-      if (isExcluded(e.target)) return;
-
-      const word = getWordAtPoint(e.clientX, e.clientY);
-      if (!word) {
-        clearHoverTimer();
+      if (isExcluded(e.target)) {
+        cancelHoverIntent();
         return;
       }
 
-      if (
-        hoverWord === word &&
-        activeHoverTarget === e.target &&
-        hoverTimer !== null
-      ) {
+      const word = getWordAtPoint(e.clientX, e.clientY);
+      if (!word) {
+        cancelHoverIntent();
+        return;
+      }
+
+      if (hoverWord === word && activeHoverTarget === e.target && hoverTimer !== null) {
         return;
       }
 
@@ -168,24 +203,70 @@ export function initDetector(options: DetectorOptions): () => void {
     });
   };
 
-  const onMouseMove = (e: MouseEvent): void => {
-    if (hoverTimer === null) return;
-    if (distance(anchorX, anchorY, e.clientX, e.clientY) > MOVE_THRESHOLD_PX) {
-      clearHoverTimer();
-      hoverWord = null;
-      activeHoverTarget = null;
-      abortIfPending();
-    }
-  };
-
-  const onMouseOut = (): void => {
+  const onMouseDown = (): void => {
+    isMouseDown = true;
     clearHoverTimer();
-    hoverWord = null;
-    activeHoverTarget = null;
-    abortIfPending();
   };
 
-  const onMouseUp = (): void => {
+  const onMouseMove = (e: MouseEvent): void => {
+    // Never start hover timers while the user is clicking or dragging to select.
+    if (isMouseDown) return;
+    if (getActiveSelectionText() || options.shouldSuppressHover?.()) return;
+
+    if (distance(anchorX, anchorY, e.clientX, e.clientY) <= MOVE_THRESHOLD_PX) return;
+
+    const word = getWordAtPoint(e.clientX, e.clientY);
+    const newTarget = e.target instanceof Element ? e.target : null;
+
+    anchorX = e.clientX;
+    anchorY = e.clientY;
+
+    if (!word) {
+      // Transient null — caret landed on an element boundary or whitespace.
+      // Cancel any pending timer but keep hoverWord so we don't re-trigger
+      // the same word if the caret flips back to the text node next event.
+      clearHoverTimer();
+      return;
+    }
+
+    if (word === hoverWord && newTarget === activeHoverTarget) {
+      // Same word — timer may be running or may have already fired; either way leave it.
+      return;
+    }
+
+    // Genuinely different word — restart the timer.
+    clearHoverTimer();
+    abortIfPending();
+    hoverWord = word;
+    activeHoverTarget = newTarget;
+
+    void options.getConfig().then((config) => {
+      if (!config.isEnabled || !config.hoverEnabled) return;
+      if (getActiveSelectionText() || options.shouldSuppressHover?.()) return;
+      if (isDomainBlocked(location.hostname, config.blacklistedDomains)) return;
+      if (hoverWord !== word) return;
+
+      hoverTimer = setTimeout(() => {
+        hoverTimer = null;
+        const rect = new DOMRect(anchorX, anchorY, 1, 1);
+        fireTrigger({ text: word, mode: 'hover', rect });
+      }, config.hoverDelayMs);
+    });
+  };
+
+  const onMouseOut = (e: MouseEvent): void => {
+    const related = e.relatedTarget;
+    // Ignore bubbled mouseout when still inside the page (e.g. p → strong).
+    if (related instanceof Node && document.documentElement.contains(related)) {
+      return;
+    }
+    cancelHoverIntent();
+  };
+
+  let lastSelectionKey = '';
+  let lastSelectionAt = 0;
+
+  const commitSelection = (): void => {
     void options.getConfig().then((config) => {
       if (!config.isEnabled || !config.selectionEnabled) return;
       if (isDomainBlocked(location.hostname, config.blacklistedDomains)) return;
@@ -196,34 +277,43 @@ export function initDetector(options: DetectorOptions): () => void {
         return;
       }
 
-      const anchor = selection?.anchorNode?.parentElement ?? null;
-      if (isExcluded(anchor)) return;
+      const anchorEl = selection?.anchorNode?.parentElement ?? null;
+      const focusEl = selection?.focusNode?.parentElement ?? null;
+      if (isExcluded(anchorEl) || isExcluded(focusEl)) return;
 
       const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
       const rect = range?.getBoundingClientRect();
       if (!rect || (rect.width === 0 && rect.height === 0)) return;
 
       clearHoverTimer();
+
+      const key = text.slice(0, 120);
+      const now = Date.now();
+      if (key === lastSelectionKey && now - lastSelectionAt < 600) return;
+      lastSelectionKey = key;
+      lastSelectionAt = now;
+
       fireTrigger({ text, mode: 'select', rect });
     });
   };
 
-  document.addEventListener('mouseover', onMouseOver, {
-    capture: true,
-    passive: true,
-  });
-  document.addEventListener('mousemove', onMouseMove, {
-    capture: true,
-    passive: true,
-  });
-  document.addEventListener('mouseout', onMouseOut, {
-    capture: true,
-    passive: true,
-  });
+  const onMouseUp = (): void => {
+    isMouseDown = false;
+    // Defer until the browser finalizes the selection (fixes sentence highlight).
+    requestAnimationFrame(() => {
+      requestAnimationFrame(commitSelection);
+    });
+  };
+
+  document.addEventListener('mousedown', onMouseDown, { capture: true, passive: true });
+  document.addEventListener('mouseover', onMouseOver, { capture: true, passive: true });
+  document.addEventListener('mousemove', onMouseMove, { capture: true, passive: true });
+  document.addEventListener('mouseout', onMouseOut, { capture: true, passive: true });
   window.addEventListener('mouseup', onMouseUp);
 
   return () => {
     clearHoverTimer();
+    document.removeEventListener('mousedown', onMouseDown, true);
     document.removeEventListener('mouseover', onMouseOver, true);
     document.removeEventListener('mousemove', onMouseMove, true);
     document.removeEventListener('mouseout', onMouseOut, true);
