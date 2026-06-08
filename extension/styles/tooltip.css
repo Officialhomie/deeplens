@@ -70,6 +70,10 @@
   flex-shrink: 0;
 }
 
+.dl-tooltip[data-trigger='select'] .dl-word {
+  max-width: 200px;
+}
+
 .dl-modes {
   display: flex;
   gap: 4px;
@@ -180,6 +184,12 @@
   50% {
     opacity: 0;
   }
+}
+
+.dl-skeleton[hidden],
+.dl-stream[hidden],
+.dl-error-panel[hidden] {
+  display: none !important;
 }
 
 .dl-skeleton {
