@@ -20,6 +20,18 @@ export interface DetectorOptions {
   getConfig: () => Promise<DetectorConfig & { blacklistedDomains: string[] }>;
   onTrigger: TriggerHandler;
   onAbort: AbortHandler;
+  onSoftAbort: AbortHandler;
+  /** Block hover while a selection tooltip is active. */
+  shouldSuppressHover?: () => boolean;
+}
+
+/** Non-empty user text selection on the page. */
+export function getActiveSelectionText(): string | null {
+  const text = window.getSelection()?.toString().trim() ?? '';
+  if (text.length < MIN_SELECTION_LEN || text.length > MAX_SELECTION_LEN) {
+    return null;
+  }
+  return text;
 }
 
 const EXCLUDED_TAGS = new Set([
@@ -133,14 +145,17 @@ export function initDetector(options: DetectorOptions): () => void {
   };
 
   const abortIfPending = (): void => {
-    if (abortBeforeStream) {
-      options.onAbort();
-      abortBeforeStream = false;
+    if (!abortBeforeStream) return;
+    abortBeforeStream = false;
+    if (options.shouldSuppressHover?.()) {
+      options.onSoftAbort();
+      return;
     }
+    options.onAbort();
   };
 
   const fireTrigger = (payload: TriggerPayload): void => {
-    options.onAbort();
+    options.onSoftAbort();
     abortBeforeStream = true;
     options.onTrigger(payload);
   };
@@ -155,6 +170,7 @@ export function initDetector(options: DetectorOptions): () => void {
   const onMouseOver = (e: MouseEvent): void => {
     void options.getConfig().then((config) => {
       if (!config.isEnabled || !config.hoverEnabled) return;
+      if (getActiveSelectionText() || options.shouldSuppressHover?.()) return;
       if (isDomainBlocked(location.hostname, config.blacklistedDomains)) return;
       if (isExcluded(e.target)) {
         cancelHoverIntent();
@@ -163,11 +179,11 @@ export function initDetector(options: DetectorOptions): () => void {
 
       const word = getWordAtPoint(e.clientX, e.clientY);
       if (!word) {
-        clearHoverTimer();
+        cancelHoverIntent();
         return;
       }
 
-      if (hoverWord === word && activeHoverTarget === e.target) {
+      if (hoverWord === word && activeHoverTarget === e.target && hoverTimer !== null) {
         return;
       }
 
@@ -195,6 +211,7 @@ export function initDetector(options: DetectorOptions): () => void {
   const onMouseMove = (e: MouseEvent): void => {
     // Never start hover timers while the user is clicking or dragging to select.
     if (isMouseDown) return;
+    if (getActiveSelectionText() || options.shouldSuppressHover?.()) return;
 
     if (distance(anchorX, anchorY, e.clientX, e.clientY) <= MOVE_THRESHOLD_PX) return;
 
@@ -225,6 +242,7 @@ export function initDetector(options: DetectorOptions): () => void {
 
     void options.getConfig().then((config) => {
       if (!config.isEnabled || !config.hoverEnabled) return;
+      if (getActiveSelectionText() || options.shouldSuppressHover?.()) return;
       if (isDomainBlocked(location.hostname, config.blacklistedDomains)) return;
       if (hoverWord !== word) return;
 
@@ -245,8 +263,10 @@ export function initDetector(options: DetectorOptions): () => void {
     cancelHoverIntent();
   };
 
-  const onMouseUp = (): void => {
-    isMouseDown = false;
+  let lastSelectionKey = '';
+  let lastSelectionAt = 0;
+
+  const commitSelection = (): void => {
     void options.getConfig().then((config) => {
       if (!config.isEnabled || !config.selectionEnabled) return;
       if (isDomainBlocked(location.hostname, config.blacklistedDomains)) return;
@@ -257,15 +277,31 @@ export function initDetector(options: DetectorOptions): () => void {
         return;
       }
 
-      const anchor = selection?.anchorNode?.parentElement ?? null;
-      if (isExcluded(anchor)) return;
+      const anchorEl = selection?.anchorNode?.parentElement ?? null;
+      const focusEl = selection?.focusNode?.parentElement ?? null;
+      if (isExcluded(anchorEl) || isExcluded(focusEl)) return;
 
       const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
       const rect = range?.getBoundingClientRect();
       if (!rect || (rect.width === 0 && rect.height === 0)) return;
 
       clearHoverTimer();
+
+      const key = text.slice(0, 120);
+      const now = Date.now();
+      if (key === lastSelectionKey && now - lastSelectionAt < 600) return;
+      lastSelectionKey = key;
+      lastSelectionAt = now;
+
       fireTrigger({ text, mode: 'select', rect });
+    });
+  };
+
+  const onMouseUp = (): void => {
+    isMouseDown = false;
+    // Defer until the browser finalizes the selection (fixes sentence highlight).
+    requestAnimationFrame(() => {
+      requestAnimationFrame(commitSelection);
     });
   };
 
