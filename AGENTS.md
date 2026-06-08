@@ -25,6 +25,7 @@ npm run zip          # → release/deeplens-1.0.0.zip
 | Privacy policy (source) | `md/privacy/privacy-policy.md` |
 | Privacy policy (hosted) | https://officialhomie.github.io/deeplens/privacy/ — deploy rules: `md/release/GITHUB_PAGES.md` |
 | CWS checklist | `md/checklists/cws-submission-checklist.md` |
+| CWS submission runbook | `md/release/CWS-SUBMISSION-RUNBOOK.md` |
 | GitHub Pages deploy | `md/release/GITHUB_PAGES.md` |
 | Release notes | `md/release/RELEASE_NOTES-v1.0.0.md` |
 
