@@ -2,7 +2,8 @@
 
 **Version:** 1.0.0  
 **Captured:** 2026-05-25  
-**Package:** `extension/release/deeplens-1.0.0.zip`
+**Package:** `extension/release/deeplens-1.0.0.zip`  
+**Step-by-step runbook (👤 vs 🤖):** `md/release/CWS-SUBMISSION-RUNBOOK.md`
 
 ## Build package
 
