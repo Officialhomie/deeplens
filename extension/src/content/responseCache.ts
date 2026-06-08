@@ -27,6 +27,7 @@ export function getCachedResponse(
   ) {
     return null;
   }
+  if (!entry.streamBuffer.trim()) return null;
   return entry;
 }
 
