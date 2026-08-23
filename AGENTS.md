@@ -16,8 +16,12 @@ Build order is defined in **`md/deeplens-implementation-plan.md`**. Phases **0�
 
 ```bash
 cd extension
-npm run zip          # → release/deeplens-1.0.0.zip
+npm run zip          # typecheck + unit tests + build + preflight → release/deeplens-1.0.0.zip
 ```
+
+**Version is injected from `extension/package.json`** — `manifest.json` has no
+`version` field. Bump with `npm version`; never hand-edit the manifest.
+`scripts/preflight.mjs` fails the build if the two disagree.
 
 | Artifact | Path |
 |----------|------|
@@ -34,6 +38,10 @@ npm run zip          # → release/deeplens-1.0.0.zip
 1. `md/scope/v1-scope-freeze.md` — what ships in v1.0
 2. `md/contracts/module-naming-map.md` — where files live (`extension/` package)
 3. `md/deeplens-trd.md` — module contracts and APIs
+4. `CLAUDE.md` § Build pipeline — the content script is built **outside** CRXJS
+   as a single IIFE so the extension ships **no** `web_accessible_resources`.
+   Do not move it back into the CRXJS pipeline; `finalize-manifest.mjs` will
+   fail the build if web-accessible resources reappear.
 4. **`md/release/GITHUB_PAGES.md`** — if you touch `docs/`, privacy HTML, store scenes, or the Pages workflow (see § GitHub Pages below)
 
 ## GitHub Pages (hosted privacy + docs)
