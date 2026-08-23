@@ -9,7 +9,7 @@
 DeepLens
 
 ### Short description (≤ 132 chars)
-Understand any word in context—streaming AI explanations inline. Bring your own Anthropic API key. Reading flow stays intact.
+Hover or select any text for an instant AI explanation in context. Bring your own key — Claude, Gemini, Groq, or OpenRouter.
 
 **Privacy policy URL:** https://officialhomie.github.io/deeplens/privacy/
 
@@ -17,29 +17,67 @@ Understand any word in context—streaming AI explanations inline. Bring your ow
 
 ### Detailed description
 
-DeepLens is a reading companion for the web. Hover over a word (or select a phrase) and get a streaming AI panel with quick or deep context—definitions, mental models, and relevance to what you are reading—without opening new tabs.
+DeepLens explains what you are reading without making you leave the page.
+
+Pause on a word for about 300ms, or select a phrase, and a panel opens next to it
+with an AI explanation that streams in as it is generated. The explanation is
+written against the surrounding sentence and paragraph, so an ambiguous term is
+read the way the page means it — "transformer" on a machine-learning paper is not
+"transformer" on an electrical-engineering one.
 
 **How it works**
-- Hover for ~300ms or select text to trigger
-- Tooltip streams Claude responses inline
-- Quick mode for fast answers; Deep mode for richer context
-- Pin the panel to read longer responses
+- Hover any word for ~300ms, or select a phrase, to trigger a lookup
+- The panel streams the answer inline; nothing opens in a new tab
+- Quick mode for a fast definition, Deep mode for fuller context
+- Pin the panel to keep it open, or press Escape to dismiss it
+- Turn hover or selection triggers off independently in settings
 
-**Privacy & your key**
-- You provide your own Anthropic API key (`sk-ant-…`)
-- Your key is stored **only on your device** in Chrome extension storage
-- Selected text is sent to **Anthropic’s API** to generate responses—not to a DeepLens server
-- See our privacy policy URL in the listing
+**Bring your own API key**
+DeepLens has no subscription and no DeepLens account, because it has no server.
+You supply an API key for one of four providers and the extension talks to that
+provider directly:
 
-**Permissions explained**
-- **storage** — save settings and API key locally
-- **activeTab** — work with the page you are reading
-- **Host access to api.anthropic.com** — call the Claude API from the extension background
+- Anthropic (Claude)
+- Google Gemini — has a free tier
+- Groq — has a free tier
+- OpenRouter
+
+Your key is stored using Chrome's extension storage on your own device. It is
+read only by the extension's background service worker when it signs a request
+to the provider you chose. It is never sent to the page you are reading, never
+included in any message the page can observe, and never transmitted anywhere
+except to that provider.
+
+**What is sent, and to whom**
+When you trigger a lookup, DeepLens sends to your chosen provider: the word or
+phrase you selected, the sentence and paragraph around it, the page heading, and
+the page title, URL and domain — the context needed to explain the term
+accurately. That request goes to your provider and nowhere else. There is no
+DeepLens server, no analytics, no telemetry, and no advertising identifier. When
+you are not triggering a lookup, nothing is transmitted at all.
+
+**Permissions, and why each is needed**
+- **storage** — keeps your settings and API key on your device. This is the only
+  permission requested at install.
+- **Access to the sites you visit** — DeepLens reads the text around what you
+  hover or select in order to explain it. This is how the extension works at all;
+  it applies only when you trigger a lookup, and page content is never stored.
+- **Provider access (requested later, not at install)** — the four provider API
+  origins are *optional* permissions. DeepLens asks for exactly one of them, for
+  the provider you actually selected, at the moment you set it up. Choosing a
+  different provider later releases the previous one.
+
+**Good for**
+Readers of technical documentation, research papers, legal and financial
+writing, and anyone reading in a field they are still learning — where the
+blocker is usually one unfamiliar term per paragraph, not the whole page.
 
 **v1.0 notes**
-- Chrome only (MV3)
-- English output
-- Domain blacklist UI coming in a future update
+- Chrome only (Manifest V3)
+- Responses in English
+- Requires your own API key from one of the four providers above
+- Domain blacklist UI and a copy-to-clipboard shortcut are planned for a
+  follow-up release
 
 ### Category
 Productivity
