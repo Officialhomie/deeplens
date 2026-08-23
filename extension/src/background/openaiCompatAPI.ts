@@ -24,6 +24,8 @@ const OPENROUTER_FREE_MODELS = [
   'openai/gpt-oss-20b:free',
 ] as const;
 
+type OpenRouterFreeModel = (typeof OPENROUTER_FREE_MODELS)[number];
+
 export const OPENAI_COMPAT_MAX_TOKENS: Record<QueryMode, number> = {
   quick: 200,
   deep: 600,
@@ -105,7 +107,7 @@ async function fetchOpenRouterWithFallback(
   extraHeaders: Record<string, string>,
 ): Promise<{ response: Response; model: string; rateLimitMs?: number }> {
   let lastResponse: Response | null = null;
-  let lastModel = OPENROUTER_FREE_MODELS[0];
+  let lastModel: OpenRouterFreeModel = OPENROUTER_FREE_MODELS[0];
   let bestRateLimitMs: number | undefined;
 
   for (let i = 0; i < OPENROUTER_FREE_MODELS.length; i++) {
