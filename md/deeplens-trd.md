@@ -187,38 +187,55 @@ chrome.runtime.sendMessage({ type: 'DEEPLENS_ABORT' })
     }
   ],
   "permissions": [
-    "storage",
-    "activeTab",
-    "scripting"
+    "storage"
   ],
-  "host_permissions": [
-    "https://api.anthropic.com/*"
+  "optional_host_permissions": [
+    "https://api.anthropic.com/*",
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.groq.com/*",
+    "https://openrouter.ai/*"
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": ["styles/tooltip.css"],
-      "matches": ["<all_urls>"]
-    }
-  ]
+  }
 }
 ```
 
+> **Note.** `version` is **not** in the source manifest — `vite.config.ts`
+> injects it from `package.json`. `content_scripts` is injected by
+> `scripts/finalize-manifest.mjs` after the standalone IIFE content-script build.
+> There is no `web_accessible_resources` entry: the tooltip CSS is bundled into
+> the content script, so nothing shipped is reachable from a host page.
+
 ### 3.2 Permission Justification
+
+**Requested at install:**
 
 | Permission | Why needed | Scope |
 |-----------|-----------|-------|
-| `storage` | Read/write API key, settings, session mode | Local only — `chrome.storage.local` |
-| `activeTab` | Send messages to the active tab's content script | Current tab only, when user triggers action |
-| `scripting` | Programmatically inject content script if needed for SPA re-navigation | Active tab only |
-| `host_permissions: api.anthropic.com` | Service worker must fetch to Anthropic's API | Outbound only, no page data sent without user trigger |
+| `storage` | Read/write API key, provider choice, settings, session mode | Local only — `chrome.storage.local`, never `storage.sync` |
+| `content_scripts: <all_urls>` | Hover/select triggers must work on any page the user reads | A match pattern, not a host permission. Reads surrounding text only on a user trigger; stores nothing; never receives the API key. |
+
+**Requested at runtime, one at a time** (`optional_host_permissions`):
+
+| Origin | Requested when |
+|--------|----------------|
+| `https://api.anthropic.com/*` | User selects Anthropic |
+| `https://generativelanguage.googleapis.com/*` | User selects Google Gemini |
+| `https://api.groq.com/*` | User selects Groq |
+| `https://openrouter.ai/*` | User selects OpenRouter |
+
+Flow owned by `shared/providerHosts.ts`; requests are issued from a user gesture
+in the popup, and `pruneProviderPermissions()` releases every other provider
+origin so exactly one is ever held. `messageRouter.ts` gates each query on
+`chrome.permissions.contains` and relays `MISSING_HOST_PERMISSION` when absent.
 
 **Not requested (intentionally excluded):**
-- `tabs` — not needed; `activeTab` covers message routing
-- `history`, `bookmarks`, `cookies` — no access to user browsing data
-- `<all_urls>` in host_permissions — only `api.anthropic.com` is a host permission; `<all_urls>` in `content_scripts.matches` is a content script match pattern (different security model)
+- `activeTab` — no code path uses it
+- `scripting` — the content script is declared statically; nothing is injected programmatically
+- `tabs` — `chrome.tabs.sendMessage` / `chrome.tabs.create` do not require it, and `trust.ts` falls back to `sender.url`
+- `history`, `bookmarks`, `cookies`, `webRequest` — no access to user browsing data
+- `<all_urls>` as a **host permission** — only as a `content_scripts` match pattern (a different security model)
 
 ---
 
@@ -1329,7 +1346,7 @@ deeplens/
 
 - [ ] All icons present (16, 48, 128)
 - [ ] Privacy policy URL populated in CWS listing
-- [ ] `host_permissions` limited to `api.anthropic.com` only
+- [ ] `host_permissions` absent; provider origins are `optional_host_permissions` requested at runtime
 - [ ] No `eval` or dynamic code execution
 - [ ] Permissions justified in CWS listing description
 - [ ] Extension tested on Chrome stable (not just Canary)
@@ -1425,7 +1442,7 @@ window.addEventListener('deeplens:navigate', () => {
 | `caretRangeFromPoint` returns null on some browsers/OSes | Medium | Hover detection fails silently | Fallback: use `elementFromPoint` + `TreeWalker` to find word under cursor |
 | Shadow DOM `mode: closed` blocks our own tooltip JS in some edge cases | Low | Tooltip buttons non-functional | Store shadow root reference in closure, not via `host.shadowRoot` |
 | Service worker terminated mid-stream | Medium | Stream cuts off | Detect via `chrome.runtime.lastError`; show retry CTA |
-| MV3 `host_permissions` change in future Chrome release | Low | API calls break | Monitor Chrome dev blog; `activeTab` + scripting API as fallback |
+| MV3 optional-permission behaviour changes in a future Chrome release | Low | Provider calls break | Monitor Chrome dev blog; `messageRouter` already surfaces `MISSING_HOST_PERMISSION` with a recovery path in the popup |
 | `caretRangeFromPoint` deprecated (already non-standard) | Low | Hover detection breaks on future Chrome | Fallback to `Selection` API + `Range` expansion on mousedown |
 | DOMPurify adds 18KB to content script | Certain | Bundle size increase | Acceptable — XSS protection is not optional |
 | Anthropic SSE format changes in future API version | Low | Stream parser breaks | Pin `anthropic-version` header; document update process |

@@ -17,18 +17,29 @@ test.describe('hover trigger', () => {
     await waitForTooltipHost(extPage, 15_000);
   });
 
-  test('tooltip shows word label and mode buttons', async ({ extPage }) => {
+  // The tooltip renders into a CLOSED shadow root, so its internals are
+  // deliberately unreachable from the page — Playwright's `pierce/` engine
+  // only traverses open roots. Assert the observable contract here; the
+  // tooltip's markup and controls are covered in tests/unit/tooltipRender.test.ts.
+  test('tooltip host attaches and stays isolated from the page', async ({
+    extPage,
+  }) => {
     await extPage.goto(await fixtureUrl('test-page.html'));
     await extPage.waitForLoadState('domcontentloaded');
     await extPage.waitForTimeout(300);
     await hoverText(extPage, 'eigenvalue');
     await waitForTooltipHost(extPage, 15_000);
 
-    await expect(extPage.locator('pierce/.dl-tooltip')).toBeVisible({ timeout: 5_000 });
-    await expect(extPage.locator('pierce/.dl-word')).toHaveText('eigenvalue', { timeout: 3_000 });
-    await expect(extPage.locator('pierce/.dl-mode-btn[data-mode="quick"]')).toBeVisible();
-    await expect(extPage.locator('pierce/.dl-mode-btn[data-mode="deep"]')).toBeVisible();
-    await expect(extPage.locator('pierce/.dl-icon-btn[aria-label="Close"]')).toBeVisible();
+    const probe = await extPage.evaluate(() => {
+      const host = document.querySelector('#deeplens-host');
+      return {
+        present: host !== null,
+        // closed root => page scripts cannot read the user's lookups
+        shadowReadableByPage: host !== null && host.shadowRoot !== null,
+      };
+    });
+    expect(probe.present).toBe(true);
+    expect(probe.shadowReadableByPage).toBe(false);
   });
 
   test('tooltip stays open for 5 seconds without flickering', async ({ extPage }) => {

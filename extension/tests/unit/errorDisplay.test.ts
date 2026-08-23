@@ -5,6 +5,7 @@ import { ERROR_CODE } from '../../src/shared/errors';
 const RECOVERY: Record<string, { hasAction: boolean; retryable: boolean }> = {
   [ERROR_CODE.NO_API_KEY]: { hasAction: true, retryable: false },
   [ERROR_CODE.INVALID_KEY]: { hasAction: true, retryable: false },
+  [ERROR_CODE.MISSING_HOST_PERMISSION]: { hasAction: true, retryable: false },
   [ERROR_CODE.RATE_LIMIT]: { hasAction: false, retryable: false },
   [ERROR_CODE.SESSION_RATE_LIMIT]: { hasAction: false, retryable: false },
   [ERROR_CODE.API_OVERLOADED]: { hasAction: true, retryable: true },

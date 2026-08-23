@@ -50,9 +50,14 @@ describe('validateQueryPayload', () => {
     expect(validateQueryPayload(p)).toBe(false);
   });
 
-  it('rejects API key material in payload', () => {
+  it.each([
+    ['anthropic', 'sk-ant-api03-abcdefghijklmnopqrstuvwxyz'],
+    ['openrouter', 'sk-or-v1-abcdefghijklmnopqrstuvwxyz0123'],
+    ['groq', 'gsk_abcdefghijklmnopqrstuvwxyz0123456789'],
+    ['gemini', 'AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZ0123456'],
+  ])('rejects %s API key material in payload', (_provider, key) => {
     const p = validPayload();
-    p.context.sentenceContext = 'leaked sk-ant-api03-abcdefghijklmnopqrstuvwxyz';
+    p.context.sentenceContext = `leaked ${key}`;
     expect(validateQueryPayload(p)).toBe(false);
     expect(() => assertPayloadHasNoSecrets(p)).toThrow();
   });

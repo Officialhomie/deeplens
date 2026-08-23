@@ -40,13 +40,18 @@ export async function streamGeminiResponse(
   isStale: () => boolean,
 ): Promise<void> {
   const queryId = payload.queryId;
-  const url = `${GEMINI_BASE_URL}/${GEMINI_MODEL}:streamGenerateContent?alt=sse&key=${apiKey}`;
+  // The key goes in a header, not the query string: URLs surface in error
+  // objects, devtools panels and crash reports far more readily than headers do.
+  const url = `${GEMINI_BASE_URL}/${GEMINI_MODEL}:streamGenerateContent?alt=sse`;
 
   let response: Response;
   try {
     response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
+      },
       body: JSON.stringify(buildGeminiRequest(payload)),
       signal,
     });

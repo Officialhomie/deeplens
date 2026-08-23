@@ -1,4 +1,4 @@
-import { expect, test, fixtureUrl, hoverWord, hoverText, tooltipHostCount } from './extension-fixture';
+import { expect, test, fixtureUrl, hoverWord, tooltipHostCount } from './extension-fixture';
 
 test.describe('exclusion zones', () => {
   test('does not trigger inside input, textarea, or contenteditable', async ({

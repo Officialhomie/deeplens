@@ -88,6 +88,12 @@
 
     <!-- Configured settings -->
     <section id="view-settings" class="view" hidden>
+      <div id="perm-banner" class="banner banner-warn" hidden>
+        <span>DeepLens cannot reach your provider without host access.</span>
+        <button type="button" id="grant-perm-btn" class="btn btn-primary">
+          Grant access
+        </button>
+      </div>
       <label class="field">
         <span>AI provider</span>
         <select id="provider">

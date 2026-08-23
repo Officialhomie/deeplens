@@ -7,12 +7,14 @@ extension/release/
 extension/playwright-report/
 extension/test-results/
 
-# Local commit tooling and snapshots (not shipped)
-.phase1-snapshots/
-.phase2-snapshots/
-.phase1-commit.sh
-.phase2-commit.sh
-.phase1-files.txt
-.phase2-files.txt
+# Local commit tooling and snapshots (not shipped).
+# Generalised so new phase artifacts can never be committed by accident.
+.phase*-snapshots/
+.phase*-commit.sh
+.phase*-files.txt
+.post-v1-commit.sh
 .workspace-current-backup/
 .workspace-full-backup-extension/
+
+# Editor / tooling scratch output
+.cursor/debug-*.log

@@ -24,6 +24,7 @@ import { setSessionMode } from './sessionMode';
 import { safeRenderMarkdown } from './sanitize';
 import { shadowDOMManager } from './shadowDOM';
 import { detectPageTheme } from './theme';
+import tooltipCSS from '../../styles/tooltip.css?raw';
 
 const SESSION_RATE_LIMIT_COUNTDOWN_MS = 3 * 60 * 1000;
 const DEFAULT_RATE_LIMIT_COUNTDOWN_MS = 60 * 1000;
@@ -89,30 +90,18 @@ function clearFadeTimer(): void {
   }
 }
 
+/**
+ * Styles are bundled into the content script rather than fetched from a
+ * web-accessible URL. This removes the only extension resource a host page
+ * could probe to fingerprint the install, drops a network round-trip, and
+ * removes the strict-CSP failure path the old <link> fallback existed for.
+ */
 function injectStyles(root: ShadowRoot): void {
-  if (root.querySelector('#dl-tooltip-css') || root.querySelector('#dl-tooltip-css-inline')) {
-    return;
-  }
-  const href = chrome.runtime.getURL('styles/tooltip.css');
-  const link = document.createElement('link');
-  link.id = 'dl-tooltip-css';
-  link.rel = 'stylesheet';
-  link.href = href;
-
-  link.onerror = () => {
-    void fetch(href)
-      .then((r) => r.text())
-      .then((css) => {
-        if (root.querySelector('#dl-tooltip-css-inline')) return;
-        const style = document.createElement('style');
-        style.id = 'dl-tooltip-css-inline';
-        style.textContent = css;
-        root.appendChild(style);
-      })
-      .catch(() => undefined);
-  };
-
-  root.appendChild(link);
+  if (root.querySelector('#dl-tooltip-css')) return;
+  const style = document.createElement('style');
+  style.id = 'dl-tooltip-css';
+  style.textContent = tooltipCSS;
+  root.appendChild(style);
 }
 
 function bindHostEvents(): void {
@@ -389,6 +378,13 @@ function errorContent(code: string): {
     case ERROR_CODE.INVALID_KEY:
       return {
         message: 'Invalid or missing API key.',
+        actionLabel: 'Open settings',
+        action: openSettings,
+      };
+    case ERROR_CODE.MISSING_HOST_PERMISSION:
+      return {
+        message:
+          'DeepLens needs permission to reach your AI provider. Grant it in settings.',
         actionLabel: 'Open settings',
         action: openSettings,
       };

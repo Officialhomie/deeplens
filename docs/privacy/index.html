@@ -108,107 +108,176 @@
     <header>
       <a href="../">← DeepLens</a>
       <h1>Privacy Policy</h1>
-      <p>Effective May 25, 2026 · Version 1.0 · Chrome extension v1.0.0</p>
+      <p>Effective August 23, 2026 · Version 1.1 · Chrome extension v1.0.0</p>
     </header>
     <main>
       <div class="summary">
         <p>
-          DeepLens runs on your device. We do not operate a DeepLens backend that
-          stores your reading activity in v1.0. When you trigger a lookup,
-          selected text and page context are sent <strong>directly from your
-          browser</strong> to <strong>Anthropic’s API</strong> using
+          DeepLens runs entirely on your device. There is no DeepLens server, so
+          there is nothing for us to log, store, or sell. When you trigger a
+          lookup, the selected text and its surrounding context are sent
+          <strong>directly from your browser</strong> to
+          <strong>the AI provider you chose</strong>, authenticated with
           <strong>your own API key</strong>.
         </p>
       </div>
 
-      <h2>What data is processed</h2>
+      <h2>Choose your provider</h2>
+      <p>
+        DeepLens supports four providers. You pick one and supply your own key
+        for it. Only the provider you have selected ever receives your data —
+        DeepLens does not contact the other three.
+      </p>
       <table>
         <thead>
-          <tr>
-            <th>Data</th>
-            <th>Where it goes</th>
-            <th>Why</th>
-          </tr>
+          <tr><th>Provider</th><th>Endpoint</th></tr>
         </thead>
         <tbody>
-          <tr>
-            <td>Selected word or phrase</td>
-            <td>Anthropic API</td>
-            <td>Generate AI explanation</td>
-          </tr>
-          <tr>
-            <td>Surrounding sentence, paragraph, heading</td>
-            <td>Anthropic API</td>
-            <td>Context for the response</td>
-          </tr>
-          <tr>
-            <td>Page title, URL, domain</td>
-            <td>Anthropic API</td>
-            <td>Context for the response</td>
-          </tr>
-          <tr>
-            <td>Your Anthropic API key</td>
-            <td>Stored locally; sent only to api.anthropic.com</td>
-            <td>Authenticate API requests</td>
-          </tr>
+          <tr><td>Anthropic (Claude)</td><td><code>api.anthropic.com</code></td></tr>
+          <tr><td>Google Gemini</td><td><code>generativelanguage.googleapis.com</code></td></tr>
+          <tr><td>Groq</td><td><code>api.groq.com</code></td></tr>
+          <tr><td>OpenRouter</td><td><code>openrouter.ai</code></td></tr>
         </tbody>
       </table>
 
-      <h2>What we do not collect (v1.0)</h2>
+      <h2>What data is processed</h2>
+      <p>
+        Sent to your selected provider <strong>only when you trigger a
+        lookup</strong> — by hovering a word for about 300ms, or selecting a
+        phrase:
+      </p>
+      <table>
+        <thead>
+          <tr><th>Data</th><th>Where it goes</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>The word or phrase you selected</td>
+            <td>Your selected provider’s API</td>
+            <td>Generate the explanation</td>
+          </tr>
+          <tr>
+            <td>Surrounding sentence, paragraph and heading</td>
+            <td>Your selected provider’s API</td>
+            <td>Disambiguate the term in context</td>
+          </tr>
+          <tr>
+            <td>Page title, URL and domain</td>
+            <td>Your selected provider’s API</td>
+            <td>Context for the response</td>
+          </tr>
+          <tr>
+            <td>Your API key</td>
+            <td>
+              Stored locally in <code>chrome.storage.local</code>; sent only to
+              your selected provider
+            </td>
+            <td>Authenticate the request</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>When you are not triggering a lookup, nothing leaves your browser.</p>
+
+      <h2>How your API key is protected</h2>
+      <ul>
+        <li>The key is stored using Chrome’s extension storage on your device.</li>
+        <li>
+          It is read <strong>only</strong> by the extension’s background service
+          worker, in a single module, at the moment it signs a request to your
+          provider.
+        </li>
+        <li>
+          It is never placed in a message that a web page can observe, and never
+          sent to the page you are reading.
+        </li>
+        <li>
+          Before any request payload is sent, it is scanned for API-key patterns
+          and rejected if one is found — a defence against accidental leakage.
+        </li>
+        <li>Debug logging redacts key material.</li>
+      </ul>
+
+      <h2>What we do not collect</h2>
       <ul>
         <li>No DeepLens account or login</li>
-        <li>No DeepLens server-side query logging</li>
-        <li>No analytics or advertising trackers in the extension</li>
-        <li>No sale of personal data</li>
+        <li>No DeepLens server, and therefore no server-side query logging</li>
+        <li>No analytics, telemetry, advertising identifiers, or trackers</li>
+        <li>No browsing history collection</li>
+        <li>No sale or sharing of personal data</li>
+        <li>No storage of the page content you look things up on</li>
       </ul>
 
       <h2>Local storage</h2>
       <p>
-        Settings (including your API key, hover delay, default mode, and enable
-        toggles) are stored in <strong>Chrome local extension storage</strong> on
-        your device. Uninstalling the extension or clearing extension data
-        removes this storage.
+        Your settings — API key, provider choice, hover delay, default mode, and
+        the enable toggles — are stored in <strong>Chrome local extension
+        storage</strong> on your device. Uninstalling the extension or clearing
+        its data removes all of it.
       </p>
 
       <h2>Third parties</h2>
       <p>
-        <strong>Anthropic</strong> processes text you send when you use the
-        extension. Their handling of data is governed by
-        <a href="https://www.anthropic.com/legal/privacy" rel="noopener"
-          >Anthropic’s privacy policy</a
-        >. You must comply with Anthropic’s terms when using your API key.
+        The provider you select processes the text you send. Their handling of
+        that data is governed by their own policies, and your use of your key is
+        subject to their terms:
+      </p>
+      <ul>
+        <li><a href="https://www.anthropic.com/legal/privacy">Anthropic</a></li>
+        <li><a href="https://policies.google.com/privacy">Google Gemini</a></li>
+        <li><a href="https://groq.com/privacy-policy/">Groq</a></li>
+        <li><a href="https://openrouter.ai/privacy">OpenRouter</a></li>
+      </ul>
+      <p>
+        DeepLens has no business relationship with these providers; you are using
+        your own account with them.
       </p>
 
       <h2>Permissions (Chrome)</h2>
+      <p>Requested at install:</p>
       <table>
         <thead>
-          <tr>
-            <th>Permission</th>
-            <th>Purpose</th>
-          </tr>
+          <tr><th>Permission</th><th>Purpose</th></tr>
         </thead>
         <tbody>
           <tr>
             <td><code>storage</code></td>
-            <td>Save settings and API key locally</td>
+            <td>Save your settings and API key locally on your device</td>
           </tr>
           <tr>
-            <td><code>activeTab</code></td>
-            <td>Extension action on the current tab</td>
-          </tr>
-          <tr>
-            <td><code>scripting</code></td>
-            <td>Reserved for extension injection patterns</td>
-          </tr>
-          <tr>
-            <td>Host: api.anthropic.com</td>
-            <td>Stream AI responses from Claude API</td>
+            <td>Access to sites you visit (content script)</td>
+            <td>
+              Read the text around what you hover or select, so it can be
+              explained. Applies only when you trigger a lookup. Page content is
+              never stored, or transmitted anywhere except to your selected
+              provider as part of that lookup.
+            </td>
           </tr>
         </tbody>
       </table>
+
+      <p>Requested later, only when needed:</p>
+      <table>
+        <thead>
+          <tr><th>Optional permission</th><th>When it is requested</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>api.anthropic.com</code></td><td>Only if you select Anthropic</td></tr>
+          <tr><td><code>generativelanguage.googleapis.com</code></td><td>Only if you select Google Gemini</td></tr>
+          <tr><td><code>api.groq.com</code></td><td>Only if you select Groq</td></tr>
+          <tr><td><code>openrouter.ai</code></td><td>Only if you select OpenRouter</td></tr>
+        </tbody>
+      </table>
       <p>
-        Content scripts run on web pages you visit so hover and selection can
-        work; they do <strong>not</strong> receive your API key.
+        No provider access is granted when you install DeepLens. The extension
+        asks for exactly one provider origin, at the moment you configure that
+        provider. If you later switch providers, the previous provider’s access
+        is released.
+      </p>
+      <p>
+        Content scripts run on the pages you visit so hover and selection can
+        work. They never receive your API key. The explanation panel is rendered
+        inside a closed shadow root, so the page you are reading cannot read what
+        you looked up.
       </p>
 
       <h2>Your choices</h2>
@@ -238,6 +307,6 @@
         Chrome Web Store listing.
       </p>
     </main>
-    <footer>DeepLens · Privacy Policy v1.0</footer>
+    <footer>DeepLens · Privacy Policy v1.1</footer>
   </body>
 </html>

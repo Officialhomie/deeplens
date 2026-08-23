@@ -1,4 +1,4 @@
-import { expect, test, fixtureUrl, hoverText, tooltipHostCount } from './extension-fixture';
+import { expect, test, fixtureUrl, tooltipHostCount } from './extension-fixture';
 
 test.describe('abort on leave', () => {
   test('cancels pending hover when pointer leaves before delay', async ({

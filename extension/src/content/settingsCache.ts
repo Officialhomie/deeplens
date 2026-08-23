@@ -13,7 +13,7 @@ export async function initSettingsCache(): Promise<void> {
   if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area !== 'local') return;
-      const keys = Object.keys(changes) as Array<keyof PublicSettings>;
+      const keys = Object.keys(changes);
       if (keys.some((k) => k !== 'apiKey')) {
         void refreshSettingsCache();
       }

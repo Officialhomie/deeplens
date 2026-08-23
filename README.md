@@ -28,8 +28,14 @@ npm run build
 ```bash
 cd extension
 npm run zip
-# Upload extension/release/deeplens-1.0.0.zip to CWS Developer Dashboard
+# Runs typecheck + unit tests + build + preflight, then writes
+# extension/release/deeplens-<version>.zip for the CWS Developer Dashboard
 ```
+
+Packaging refuses to produce a ZIP if TypeScript fails, unit tests fail, the
+manifest version disagrees with `package.json`, an icon is missing or the wrong
+size, or the package contains source maps, test files or other dev artifacts.
+The final permission set is printed at package time for review.
 
 See [`md/checklists/cws-submission-checklist.md`](md/checklists/cws-submission-checklist.md), [`md/release/store-listing-cws-paste.md`](md/release/store-listing-cws-paste.md), and [`md/release/SCREENSHOTS.md`](md/release/SCREENSHOTS.md).
 
@@ -57,7 +63,9 @@ open deeplens-app-flow.html
 
 ## Project Status
 
-- **Build phase:** Phases 0–10 complete — **v1.0.0 release candidate ready**
-- **Version:** 1.0.0
+- **Build phase:** Phases 0–10 complete, plus a release-hardening pass — **v1.0.0 release candidate ready**
+- **Version:** 1.0.0 (single source of truth: `extension/package.json`)
+- **Permissions:** `storage` only at install; provider API origins are optional
+  and requested at runtime for the one provider you select
 - **Author:** 0xVerse / eth-content-architect
 - **Date:** May 2026

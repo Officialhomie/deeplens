@@ -21,7 +21,9 @@ npm run zip
 
 - **version:** 1.0.0
 - **MV3:** yes
-- **Permissions:** storage, activeTab, scripting
+- **Permissions:** `storage` only at install. Provider API origins are
+  `optional_host_permissions`, requested at runtime for the selected provider.
+  No `web_accessible_resources`. See `md/evidence/permission-audit-v1.md`.
 - **Host:** https://api.anthropic.com/*
 
 ## Bundle verification (Phase 8)
