@@ -213,6 +213,15 @@ export function initDetector(options: DetectorOptions): () => void {
     if (isMouseDown) return;
     if (getActiveSelectionText() || options.shouldSuppressHover?.()) return;
 
+    // Exclusion zones must be honoured here as well as in onMouseOver:
+    // mouseover fires once on entry, but mousemove keeps firing inside the
+    // element and would otherwise start a hover timer over a text field.
+    // Editable regions have real text nodes, so getWordAtPoint succeeds there.
+    if (isExcluded(e.target)) {
+      cancelHoverIntent();
+      return;
+    }
+
     if (distance(anchorX, anchorY, e.clientX, e.clientY) <= MOVE_THRESHOLD_PX) return;
 
     const word = getWordAtPoint(e.clientX, e.clientY);
