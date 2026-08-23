@@ -1,46 +1,53 @@
 #!/usr/bin/env node
 /**
- * Build Chrome Web Store upload ZIP from dist/ (TRD §12.5).
- * Excludes source maps and dev artifacts.
+ * Build the Chrome Web Store upload ZIP from dist/ (TRD §12.5).
+ *
+ * Uses archiver rather than the system `zip` binary so packaging behaves
+ * identically on macOS, Linux, Windows and CI images that ship no zip CLI.
+ * Preflight runs before packaging, and the archive is re-inspected afterwards
+ * so what we report is what the file actually contains.
  */
-import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
-import { execSync } from 'node:child_process';
-import { join } from 'node:path';
+import { createWriteStream, existsSync, mkdirSync, rmSync, statSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { ZipArchive } from 'archiver';
+import { preflight } from './preflight.mjs';
 
-const root = process.cwd();
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const dist = join(root, 'dist');
-const iconsDir = join(root, 'icons');
 const releaseDir = join(root, 'release');
 
-if (!existsSync(dist)) {
-  console.error('Run `npm run build` before packaging. dist/ not found.');
-  process.exit(1);
-}
+const { manifest } = preflight({ root, dist });
 
-for (const icon of ['icon16.png', 'icon48.png', 'icon128.png']) {
-  const p = join(iconsDir, icon);
-  if (!existsSync(p)) {
-    console.error(`Missing ${p}. Run \`npm run icons\` first.`);
-    process.exit(1);
-  }
-}
-
-const version = JSON.parse(
-  readFileSync(join(dist, 'manifest.json'), 'utf8'),
-).version;
+const zipPath = join(releaseDir, `deeplens-${manifest.version}.zip`);
 mkdirSync(releaseDir, { recursive: true });
-const zipName = `deeplens-${version}.zip`;
-const zipPath = join(releaseDir, zipName);
+if (existsSync(zipPath)) rmSync(zipPath);
 
-if (existsSync(zipPath)) {
-  execSync(`rm -f "${zipPath}"`);
-}
+const output = createWriteStream(zipPath);
+const archive = new ZipArchive({ zlib: { level: 9 } });
 
-execSync(
-  `cd "${dist}" && zip -r "${zipPath}" . -x "*.map" -x "*.DS_Store" -x "__MACOSX/*"`,
-  { stdio: 'inherit' },
-);
+const done = new Promise((resolvePromise, reject) => {
+  output.on('close', resolvePromise);
+  archive.on('warning', reject);
+  archive.on('error', reject);
+});
 
-const kb = (statSync(zipPath).size / 1024).toFixed(1);
-console.log(`\nRelease package: ${zipPath} (${kb} KB)`);
-console.log('Upload in Chrome Web Store Developer Dashboard → Package.');
+archive.pipe(output);
+// Deterministic: directory order is sorted by archiver, and the glob excludes
+// the artifacts preflight already refuses to ship.
+archive.glob('**/*', {
+  cwd: dist,
+  dot: false,
+  ignore: ['**/*.map', '**/.DS_Store', '__MACOSX/**', '**/*.log'],
+});
+await archive.finalize();
+await done;
+
+// Re-run preflight against the finished artifact so the size gate sees the
+// real file rather than an estimate.
+preflight({ root, dist, zipPath, log: () => {} });
+
+const bytes = statSync(zipPath).size;
+console.log(`\n✓ Release package: ${zipPath}`);
+console.log(`  ${(bytes / 1024).toFixed(1)} KB · version ${manifest.version}`);
+console.log('  Upload in Chrome Web Store Developer Dashboard → Package.');
