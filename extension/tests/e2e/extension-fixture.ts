@@ -1,6 +1,5 @@
 import { test as base, type BrowserContext, type Page } from '@playwright/test';
 import {
-  fixtureUrl,
   getExtensionId,
   launchExtensionContext,
   seedExtensionSettings,
