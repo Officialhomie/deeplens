@@ -112,17 +112,25 @@ Screenshot files (in order):
 
 Paste or paraphrase from paste file § “Permission justification”:
 
-| Permission | Justification |
-|------------|---------------|
-| `storage` | Persist API key and user preferences locally on device |
-| `activeTab` | Run features on the current tab when the user invokes the extension |
-| `scripting` | MV3 content script injection architecture |
-| `https://api.anthropic.com/*` | Stream Claude API responses for user-initiated lookups |
+| Permission | Type | Justification |
+|------------|------|---------------|
+| `storage` | Required | Persist the user's provider choice, API key and preferences locally. The only permission requested at install. |
+| `<all_urls>` content script | Required | The core interaction is hover/select on arbitrary pages. Reads the text surrounding the user's trigger to build the query; does not run until the user triggers a lookup, stores no page content, and never receives the API key. |
+| `https://api.anthropic.com/*` | **Optional** | Requested only if the user selects Anthropic. |
+| `https://generativelanguage.googleapis.com/*` | **Optional** | Requested only if the user selects Google Gemini. |
+| `https://api.groq.com/*` | **Optional** | Requested only if the user selects Groq. |
+| `https://openrouter.ai/*` | **Optional** | Requested only if the user selects OpenRouter. |
+
+Add for the reviewer: no provider origin is granted at install; each is an
+`optional_host_permissions` entry requested via `chrome.permissions.request()`
+from a user gesture for the single selected provider, and switching providers
+releases the previous origin. The extension declares **no**
+`web_accessible_resources`.
 
 **Single-purpose** (if asked):
 
 ```
-DeepLens provides on-page AI explanations of words and phrases while you browse, using the user’s own Anthropic API key.
+DeepLens has one purpose: when the user hovers or selects text on a page, it sends that text plus its surrounding context to an AI provider the user configured with their own API key, and displays the returned explanation in a panel on the page.
 ```
 
 ### D5. Submit for review 👤
