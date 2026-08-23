@@ -4,7 +4,13 @@ const MAX_SELECTED = 500;
 const MAX_SENTENCE = 2000;
 const MAX_PARAGRAPH = 500;
 const MAX_PAGE_META = 500;
-const SECRET_PATTERN = /sk-ant[a-z0-9_-]{10,}/i;
+/** Key shapes for every supported provider (TRD §8) — not just Anthropic. */
+const SECRET_PATTERNS: RegExp[] = [
+  /sk-ant[A-Za-z0-9_-]{10,}/,
+  /sk-or-[A-Za-z0-9_-]{10,}/,
+  /gsk_[A-Za-z0-9_-]{10,}/,
+  /AIza[A-Za-z0-9_-]{10,}/,
+];
 
 const MODES: QueryMode[] = ['quick', 'deep', 'links'];
 const TRIGGERS: TriggerMode[] = ['hover', 'select'];
@@ -21,7 +27,7 @@ function isNonEmptyString(v: unknown, max: number): v is string {
 }
 
 function hasNoSecrets(value: string): boolean {
-  return !SECRET_PATTERN.test(value);
+  return !SECRET_PATTERNS.some((pattern) => pattern.test(value));
 }
 
 /** TRD §8 — reject malformed or oversize client payloads */
