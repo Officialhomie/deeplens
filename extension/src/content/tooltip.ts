@@ -381,6 +381,13 @@ function errorContent(code: string): {
         actionLabel: 'Open settings',
         action: openSettings,
       };
+    case ERROR_CODE.MISSING_HOST_PERMISSION:
+      return {
+        message:
+          'DeepLens needs permission to reach your AI provider. Grant it in settings.',
+        actionLabel: 'Open settings',
+        action: openSettings,
+      };
     case ERROR_CODE.RATE_LIMIT:
     case ERROR_CODE.SESSION_RATE_LIMIT:
       return {
