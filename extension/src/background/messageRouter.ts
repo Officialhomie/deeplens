@@ -10,6 +10,7 @@ import {
 } from './streamSession';
 import { isTrustedExtensionSender, isTrustedTabSender } from './trust';
 import { ERROR_CODE } from '../shared/errors';
+import { hasProviderPermission } from '../shared/providerHosts';
 import { safeDebug } from '../shared/safeLog';
 import { storage } from '../shared/storage';
 import {
@@ -72,6 +73,19 @@ async function handleQuery(payload: QueryPayload, tabId: number): Promise<void> 
   }
 
   const provider = await storage.get('provider');
+
+  // Provider origins are optional host permissions — a missing grant would
+  // otherwise surface as an opaque CORS/network failure.
+  if (!(await hasProviderPermission(provider))) {
+    sendToken(tabId, {
+      type: MESSAGE.TOKEN,
+      queryId: payload.queryId,
+      error: ERROR_CODE.MISSING_HOST_PERMISSION,
+      done: true,
+    });
+    return;
+  }
+
   const isStale = () => !isActiveQuery(tabId, payload.queryId);
   const relay = (msg: Parameters<typeof sendToken>[1]) => sendToken(tabId, msg);
 
@@ -89,6 +103,9 @@ async function handleQuery(payload: QueryPayload, tabId: number): Promise<void> 
       break;
   }
 }
+
+/** Exposed for unit tests — exercises the query path without the listener. */
+export const handleQueryForTests = handleQuery;
 
 export function registerMessageRouter(): void {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
